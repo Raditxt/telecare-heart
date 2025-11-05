@@ -1,0 +1,39 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.env
+
+# Firebase / Vite / Tailwind
+.firebase/          # jika pakai Firebase CLI yang bikin folder lokal
+*.cache             # cache Vite atau tooling lain
+.vite/              # kadang ada folder build internal Vite
+*.tsbuildinfo       # TS incremental build files
+
+# Tailwind
+node_modules/.cache  # jika ada caching Tailwind
+
+# Environment
+.env.local
+.env.*.local        # semua env lokal

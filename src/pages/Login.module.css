@@ -1,0 +1,288 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.main {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.mainMobile {
+  flex-direction: column;
+}
+
+.mainDesktop {
+  flex-direction: row;
+}
+
+/* Form Column */
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  position: relative;
+  z-index: 1;
+}
+
+.formColumnMobile {
+  width: 100%;
+  padding: 24px;
+}
+
+.formColumnTablet {
+  width: 50%;
+  padding: 32px;
+}
+
+.formColumnDesktop {
+  width: 40%;
+  padding: 48px;
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 448px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-weight: 800;
+  color: #0d9488;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.titleMobile {
+  font-size: 30px;
+}
+
+.titleDesktop {
+  font-size: 36px;
+}
+
+.subtitle {
+  color: #6b7280;
+}
+
+.subtitleMobile {
+  font-size: 16px;
+}
+
+.subtitleDesktop {
+  font-size: 18px;
+}
+
+/* Messages */
+.errorMessage {
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.successMessage {
+  background-color: #d1fae5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* Form Elements */
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.2s;
+  background-color: #ffffff;
+  cursor: text;
+}
+
+.input:focus {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.inputDisabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+/* Button */
+.button {
+  width: 100%;
+  background-color: #0d9488;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button:hover {
+  background-color: #0f766e;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.buttonDisabled {
+  background-color: #5eead4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.buttonDisabled:hover {
+  background-color: #5eead4;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Sidebar */
+.sidebar {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 50%, #115e59 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  position: relative;
+  z-index: 0;
+}
+
+.sidebarTablet {
+  width: 50%;
+}
+
+.sidebarDesktop {
+  width: 60%;
+}
+
+.sidebarContent {
+  color: #ffffff;
+  text-align: center;
+  max-width: 560px;
+}
+
+.heartIcon {
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.iconContainer {
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 50%;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.icon {
+  width: 80px;
+  height: 80px;
+}
+
+.sidebarTitle {
+  font-weight: 700;
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+.sidebarTitleTablet {
+  font-size: 40px;
+}
+
+.sidebarTitleDesktop {
+  font-size: 48px;
+}
+
+.sidebarText {
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.sidebarTextTablet {
+  font-size: 20px;
+}
+
+.sidebarTextDesktop {
+  font-size: 24px;
+}
+
+/* Demo Info */
+.demoInfo {
+  margin-top: 32px;
+  padding: 16px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.demoTitle {
+  font-size: 12px;
+  color: #4b5563;
+  text-align: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.demoText {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  margin: 4px 0;
+}
+
+/* Animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+}
