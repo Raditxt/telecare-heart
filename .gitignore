@@ -37,3 +37,7 @@ node_modules/.cache  # jika ada caching Tailwind
 # Environment
 .env.local
 .env.*.local        # semua env lokal
+
+
+firestore-debug.log
+firebase

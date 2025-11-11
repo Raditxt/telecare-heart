@@ -1,19 +1,80 @@
 import { auth } from "./firebase";
 import { 
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
   signOut 
 } from "firebase/auth";
+import { createUserProfile } from './userService';
 
 export const login = async (email, password) => {
   try {
-    console.log("Attempting login with:", email); // ✅ Debug log
+    console.log("Attempting login with:", email);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log("Login successful:", userCredential.user); // ✅ Debug log
+    console.log("Login successful:", userCredential.user);
     return userCredential.user;
   } catch (error) {
-    console.error("Login error:", error.message); // ✅ Debug log
-    throw new Error(error.message);
+    console.error("Login error:", error.message);
+    
+    // User-friendly error messages untuk login
+    let errorMessage = "Login gagal. Silakan coba lagi.";
+    if (error.code === 'auth/invalid-email') {
+      errorMessage = "Format email tidak valid.";
+    } else if (error.code === 'auth/user-not-found') {
+      errorMessage = "Email tidak terdaftar.";
+    } else if (error.code === 'auth/wrong-password') {
+      errorMessage = "Password salah.";
+    } else if (error.code === 'auth/too-many-requests') {
+      errorMessage = "Terlalu banyak percobaan login. Coba lagi nanti.";
+    }
+    
+    throw new Error(errorMessage);
+  }
+};
+
+export const register = async (email, password, userData) => {
+  try {
+    console.log("🔐 Attempting Firebase registration...", email);
+    
+    // 1. Create user in Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    console.log("✅ Auth registration successful - UID:", user.uid);
+
+    // 2. Create user profile in Firestore - BUT DON'T FAIL REGISTRATION IF THIS FAILS
+    try {
+      await createUserProfile({
+        uid: user.uid,
+        email: email,
+        name: userData.name,
+        role: userData.role,
+        deviceId: userData.deviceId || ''
+      });
+      console.log("✅ User profile created in Firestore");
+    } catch (firestoreError) {
+      console.warn("⚠️ Firestore profile creation failed, but auth succeeded:", firestoreError.message);
+      // JANGAN throw error di sini! Auth sudah berhasil, user bisa login
+      // Profile bisa dibuat manual nanti atau di update saat login pertama
+    }
+    
+    console.log("🎉 Registration COMPLETE - returning user");
+    return user;
+    
+  } catch (error) {
+    console.error("❌ Registration FAILED:", error);
+    
+    // User-friendly error messages HANYA untuk auth errors
+    let errorMessage = "Pendaftaran gagal. Silakan coba lagi.";
+    if (error.code === 'auth/email-already-in-use') {
+      errorMessage = "Email sudah digunakan. Silakan gunakan email lain.";
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = "Format email tidak valid.";
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = "Password terlalu lemah. Minimal 6 karakter.";
+    }
+    
+    throw new Error(errorMessage);
   }
 };
 

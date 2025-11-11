@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { login } from "../services/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom"; // ✅ TAMBAH useLocation
 import styles from "./Login.module.css";
 
 export default function Login() {
@@ -10,6 +10,16 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ UNTUK DAPATKAN STATE DARI REGISTER
+
+  // ✅ EFFECT UNTUK HANDLE SUCCESS MESSAGE DARI REGISTER
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      // Clear state agar tidak muncul lagi saat refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   const isMobile = window.innerWidth < 768;
   const isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
@@ -18,7 +28,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccessMessage("");
+    setSuccessMessage(""); // Clear success message saat login attempt
     setIsLoading(true);
 
     try {
@@ -55,9 +65,15 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Messages */}
+            {/* ✅ SUCCESS MESSAGE DARI REGISTER */}
+            {successMessage && (
+              <div className={styles.successMessage}>
+                {successMessage}
+              </div>
+            )}
+
+            {/* Error Message */}
             {error && <div className={styles.errorMessage}>{error}</div>}
-            {successMessage && <div className={styles.successMessage}>{successMessage}</div>}
 
             {/* Form */}
             <div className={styles.formGroup}>
@@ -107,6 +123,16 @@ export default function Login() {
                 'Masuk'
               )}
             </button>
+
+            {/* Register Link */}
+            <div className={styles.registerLink}>
+              <p>
+                Belum punya akun?{' '}
+                <Link to="/register" className={styles.link}>
+                  Daftar di sini
+                </Link>
+              </p>
+            </div>
 
             {/* Demo Info */}
             <div className={styles.demoInfo}>
