@@ -1,0 +1,518 @@
+.deviceMonitoring {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.titleSection h1 {
+  font-size: 2rem;
+  color: #1f2937;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.titleSection p {
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+.statsOverview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.stat {
+  text-align: center;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.statNumber {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0d9488;
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Main Content */
+.content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Device Grid */
+.deviceGrid h2,
+.errorSection h2 {
+  font-size: 1.5rem;
+  color: #374151;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.deviceCard {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 2px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.deviceCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.deviceCard.selected {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+/* Status Colors */
+.deviceCard.connected {
+  border-left: 4px solid #10b981;
+}
+
+.deviceCard.disconnected {
+  border-left: 4px solid #ef4444;
+}
+
+.deviceCard.warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.deviceCard.unknown {
+  border-left: 4px solid #6b7280;
+}
+
+/* Device Header */
+.deviceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.deviceInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.statusIcon {
+  font-size: 1.2rem;
+  margin-top: 2px;
+}
+
+.deviceName {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.deviceId {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-family: 'Monaco', 'Consolas', monospace;
+  margin: 0;
+}
+
+.indicators {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.battery,
+.signal {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.battery {
+  color: #059669;
+}
+
+/* Device Details */
+.deviceDetails {
+  margin-bottom: 16px;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.detailLabel {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.detailValue {
+  color: #374151;
+  font-weight: 600;
+}
+
+/* Device Footer */
+.deviceFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.firmware {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionButton {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.actionButton:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Error Section */
+.errorSection {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  height: fit-content;
+}
+
+.errorLogs {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.errorLog {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border-left: 4px solid #6b7280;
+}
+
+.errorLog.critical {
+  border-left-color: #ef4444;
+  background: #fef2f2;
+}
+
+.errorLog.warning {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.errorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.errorDevice {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.errorTime {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.errorMessage {
+  font-size: 0.9rem;
+  color: #1f2937;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.errorType {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.noErrors {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.noErrorsIcon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+
+.noErrors p {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #374151;
+}
+
+.noErrors span {
+  font-size: 0.9rem;
+}
+
+/* Device Detail Panel */
+.deviceDetailPanel {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  grid-column: 1 / -1;
+}
+
+.deviceDetailPanel h3 {
+  font-size: 1.3rem;
+  color: #374151;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailItem label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detailItem span {
+  font-size: 0.9rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.detailActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primaryButton,
+.secondaryButton {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.primaryButton {
+  background: #0d9488;
+  color: white;
+}
+
+.primaryButton:hover {
+  background: #0f766e;
+}
+
+.secondaryButton {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.secondaryButton:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* System Controls */
+.systemControls {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.systemControls h3 {
+  font-size: 1.3rem;
+  color: #374151;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.controlButtons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.controlButton {
+  padding: 12px 20px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.controlButton:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-left: 4px solid #0d9488;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .deviceMonitoring {
+    padding: 16px;
+  }
+  
+  .header {
+    padding: 20px;
+  }
+  
+  .statsOverview {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .deviceHeader {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .indicators {
+    flex-direction: row;
+    align-self: stretch;
+    justify-content: space-between;
+  }
+  
+  .detailActions {
+    flex-direction: column;
+  }
+  
+  .controlButtons {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .statsOverview {
+    grid-template-columns: 1fr;
+  }
+  
+  .deviceCard {
+    padding: 16px;
+  }
+}

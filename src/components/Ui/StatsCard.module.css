@@ -5,11 +5,37 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
   transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
 }
 
 .card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Status border indicators */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: transparent;
+}
+
+.card.normal::before {
+  background: #10b981;
+}
+
+.card.warning::before {
+  background: #f59e0b;
+}
+
+.card.critical::before {
+  background: #ef4444;
+  animation: pulseCritical 2s infinite;
 }
 
 .content {
@@ -22,6 +48,7 @@
   font-size: 2rem;
   padding: 12px;
   border-radius: 10px;
+  flex-shrink: 0;
 }
 
 .text {
@@ -39,6 +66,13 @@
   color: #6b7280;
   margin: 8px 0 0 0;
   font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.subtitle {
+  color: #9ca3af;
+  margin: 4px 0 0 0;
+  font-size: 0.8rem;
 }
 
 /* Color Variants */
@@ -62,6 +96,41 @@
   color: #7c3aed;
 }
 
+.orange .icon {
+  background: #fed7aa;
+  color: #ea580c;
+}
+
+.gray .icon {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Status-specific value colors */
+.card.critical .value {
+  color: #dc2626;
+}
+
+.card.warning .value {
+  color: #d97706;
+}
+
+.card.normal .value {
+  color: #059669;
+}
+
+@keyframes pulseCritical {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .card {
@@ -75,5 +144,9 @@
   .icon {
     font-size: 1.7rem;
     padding: 10px;
+  }
+  
+  .content {
+    gap: 12px;
   }
 }

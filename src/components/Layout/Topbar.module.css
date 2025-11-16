@@ -1,3 +1,4 @@
+/* components/Layout/Topbar.module.css */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -18,13 +19,13 @@
 }
 
 .menuButton {
-  display: none;
   background: none;
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
   padding: 8px;
   border-radius: 6px;
+  transition: background-color 0.2s;
 }
 
 .menuButton:hover {
@@ -41,7 +42,7 @@
 .rightSection {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 16px; /* ✅ Tambahkan gap untuk AlertBell */
 }
 
 .userInfo {
@@ -68,6 +69,13 @@
 
 .logoutButton:hover {
   background: #dc2626;
+}
+
+/* Hide menu button on desktop */
+@media (min-width: 769px) {
+  .menuButton {
+    display: none;
+  }
 }
 
 /* Mobile Styles */

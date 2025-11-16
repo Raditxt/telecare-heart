@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { register } from "../services/auth";
 import { useNavigate, Link } from "react-router-dom";
 import styles from "./Register.module.css";
@@ -9,25 +9,74 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "patient",
     deviceId: ""
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0
+  });
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
+  // Handle window resize with debounce
+  useEffect(() => {
+    let timeoutId = null;
+    
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setWindowSize({
+          width: window.innerWidth,
+          height: window.innerHeight
+        });
+      }, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      setError("");
+      setIsLoading(false);
+    };
+  }, []);
+
+  const handleChange = useCallback((e) => {
+    setFormData(prev => ({
+      ...prev,
       [e.target.name]: e.target.value
-    });
-  };
+    }));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     // Validation
+    if (!formData.name.trim()) {
+      setError("Nama lengkap harus diisi");
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      setError("Email harus diisi");
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setError("Format email tidak valid");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Password dan konfirmasi password tidak cocok");
       return;
@@ -41,58 +90,59 @@ export default function Register() {
     setIsLoading(true);
 
     try {
+      // Default role 'patient'
       await register(formData.email, formData.password, {
         name: formData.name,
-        role: formData.role,
+        role: "patient",
         deviceId: formData.deviceId
       });
       
-      // Redirect to login with success message
       navigate("/login", { 
         state: { 
           message: "Pendaftaran berhasil! Silakan login dengan akun Anda." 
         } 
       });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Terjadi kesalahan saat pendaftaran");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isMobile = window.innerWidth < 768;
-  const isDesktop = window.innerWidth >= 1024;
+  const isMobile = windowSize.width < 768;
+  const isDesktop = windowSize.width >= 1024;
 
   return (
     <div className={styles.container}>
       <div className={`${styles.main} ${isMobile ? styles.mainMobile : styles.mainDesktop}`}>
-        
-        {/* Form Column */}
-        <div className={`
-          ${styles.formColumn} 
-          ${isMobile ? styles.formColumnMobile : ''}
-          ${isDesktop ? styles.formColumnDesktop : ''}
-        `}>
+
+        <div className={` ${styles.formColumn} ${isMobile ? styles.formColumnMobile : ''} ${isDesktop ? styles.formColumnDesktop : ''}`}>
           <div className={styles.formContainer}>
-            
-            {/* Header */}
+
             <div className={styles.header}>
               <h1 className={`${styles.title} ${isDesktop ? styles.titleDesktop : styles.titleMobile}`}>
-                Daftar Akun Baru
+                Daftar Akun Pasien
               </h1>
               <p className={`${styles.subtitle} ${isDesktop ? styles.subtitleDesktop : styles.subtitleMobile}`}>
-                Buat akun TeleCare-Heart Anda
+                Buat akun TeleCare-Heart untuk memonitor kesehatan jantung Anda
               </p>
             </div>
 
-            {/* Error Message */}
-            {error && <div className={styles.errorMessage}>{error}</div>}
+            {error && (
+              <div 
+                className={styles.errorMessage}
+                role="alert"
+                aria-live="polite"
+              >
+                {error}
+              </div>
+            )}
 
-            {/* Form */}
-            <form onSubmit={handleSubmit}>
-              {/* Name Input */}
+            <form onSubmit={handleSubmit} noValidate>
               <div className={styles.formGroup}>
-                <label htmlFor="name" className={styles.label}>Nama Lengkap</label>
+                <label htmlFor="name" className={styles.label}>
+                  Nama Lengkap
+                </label>
                 <input
                   id="name"
                   name="name"
@@ -103,12 +153,14 @@ export default function Register() {
                   disabled={isLoading}
                   className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
                   required
+                  aria-required="true"
                 />
               </div>
 
-              {/* Email Input */}
               <div className={styles.formGroup}>
-                <label htmlFor="email" className={styles.label}>Email</label>
+                <label htmlFor="email" className={styles.label}>
+                  Email
+                </label>
                 <input
                   id="email"
                   name="email"
@@ -119,31 +171,13 @@ export default function Register() {
                   disabled={isLoading}
                   className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
                   required
+                  aria-required="true"
                 />
               </div>
 
-              {/* Role Selection */}
-              <div className={styles.formGroup}>
-                <label htmlFor="role" className={styles.label}>Peran</label>
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
-                >
-                  <option value="patient">Pasien</option>
-                  <option value="doctor">Dokter</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-
-              {/* Device ID (Optional) */}
               <div className={styles.formGroup}>
                 <label htmlFor="deviceId" className={styles.label}>
-                  Device ID (Opsional)
-                  <span className={styles.optional}>- untuk pasien</span>
+                  Device ID <span className={styles.optional}>(Opsional)</span>
                 </label>
                 <input
                   id="deviceId"
@@ -154,12 +188,17 @@ export default function Register() {
                   onChange={handleChange}
                   disabled={isLoading}
                   className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
+                  aria-describedby="deviceIdHelp"
                 />
+                <small id="deviceIdHelp" className={styles.helpText}>
+                  Masukkan ID perangkat monitoring jantung Anda
+                </small>
               </div>
 
-              {/* Password Input */}
               <div className={styles.formGroup}>
-                <label htmlFor="password" className={styles.label}>Password</label>
+                <label htmlFor="password" className={styles.label}>
+                  Password
+                </label>
                 <input
                   id="password"
                   name="password"
@@ -170,12 +209,15 @@ export default function Register() {
                   disabled={isLoading}
                   className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
                   required
+                  aria-required="true"
+                  minLength="6"
                 />
               </div>
 
-              {/* Confirm Password Input */}
               <div className={styles.formGroup}>
-                <label htmlFor="confirmPassword" className={styles.label}>Konfirmasi Password</label>
+                <label htmlFor="confirmPassword" className={styles.label}>
+                  Konfirmasi Password
+                </label>
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -186,58 +228,62 @@ export default function Register() {
                   disabled={isLoading}
                   className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
                   required
+                  aria-required="true"
+                  minLength="6"
                 />
               </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
+              <button 
+                type="submit" 
+                disabled={isLoading} 
                 className={`${styles.button} ${isLoading ? styles.buttonDisabled : ''}`}
+                aria-label={isLoading ? "Memproses pendaftaran" : "Daftar akun baru"}
               >
                 {isLoading ? (
                   <>
-                    <svg className={styles.spinner} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.25 }} />
-                      <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style={{ opacity: 0.75 }} />
-                    </svg>
+                    <span className={styles.spinner}></span>
                     Memproses...
                   </>
                 ) : (
-                  'Daftar'
+                  "Daftar"
                 )}
               </button>
             </form>
 
-            {/* Login Link */}
             <p className={styles.loginLink}>
-              Sudah punya akun?{' '}
+              Sudah punya akun?{" "}
               <Link to="/login" className={styles.link}>
                 Masuk di sini
               </Link>
             </p>
 
-            {/* Info */}
             <div className={styles.info}>
-              <p className={styles.infoTitle}>Informasi:</p>
-              <p className={styles.infoText}>• <strong>Pasien:</strong> Dapat melihat data kesehatan sendiri</p>
-              <p className={styles.infoText}>• <strong>Dokter:</strong> Dapat melihat data semua pasien</p>
-              <p className={styles.infoText}>• <strong>Admin:</strong> Akses penuh ke sistem</p>
+              <div className={styles.infoTitle}>Informasi Penting</div>
+              <p className={styles.infoText}>
+                • Data Anda dilindungi dan dijaga kerahasiaannya
+              </p>
+              <p className={styles.infoText}>
+                • Pastikan email yang Anda gunakan aktif
+              </p>
+              <p className={styles.infoText}>
+                • Device ID dapat ditambahkan nanti di pengaturan akun
+              </p>
             </div>
+
           </div>
         </div>
 
-        {/* Sidebar (Desktop Only) */}
         {!isMobile && (
-          <div className={`
-            ${styles.sidebar} 
-            ${isDesktop ? styles.sidebarDesktop : ''}
-          `}>
+          <div className={`${styles.sidebar} ${isDesktop ? styles.sidebarDesktop : styles.sidebarTablet}`}>
             <div className={styles.sidebarContent}>
-              
               <div className={styles.heartIcon}>
                 <div className={styles.iconContainer}>
-                  <svg className={styles.icon} fill="currentColor" viewBox="0 0 24 24">
+                  <svg 
+                    className={styles.icon} 
+                    fill="currentColor" 
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                   </svg>
                 </div>
@@ -246,28 +292,32 @@ export default function Register() {
               <h2 className={`${styles.sidebarTitle} ${isDesktop ? styles.sidebarTitleDesktop : styles.sidebarTitleTablet}`}>
                 Bergabung dengan TeleCare-Heart
               </h2>
-              
               <p className={`${styles.sidebarText} ${isDesktop ? styles.sidebarTextDesktop : styles.sidebarTextTablet}`}>
-                Dapatkan akses ke monitoring kesehatan jantung real-time dan konsultasi dengan dokter profesional.
+                Akses monitoring kesehatan jantung real-time dan konsultasi dokter profesional.
               </p>
 
               <div className={styles.features}>
                 <div className={styles.feature}>
+                  <span className={styles.featureIcon}>❤️</span>
+                  <span>Monitoring jantung 24/7</span>
+                </div>
+                <div className={styles.feature}>
                   <span className={styles.featureIcon}>📊</span>
-                  <span>Monitoring Real-time</span>
+                  <span>Laporan kesehatan detail</span>
                 </div>
                 <div className={styles.feature}>
                   <span className={styles.featureIcon}>👨‍⚕️</span>
-                  <span>Konsultasi Dokter</span>
+                  <span>Konsultasi dokter online</span>
                 </div>
                 <div className={styles.feature}>
-                  <span className={styles.featureIcon}>📱</span>
-                  <span>Akses 24/7</span>
+                  <span className={styles.featureIcon}>🔔</span>
+                  <span>Notifikasi peringatan dini</span>
                 </div>
               </div>
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

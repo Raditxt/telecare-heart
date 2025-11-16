@@ -8,23 +8,38 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+/* When sidebar is OPEN */
+.sidebarOpen {
+  margin-left: 280px;
+  width: calc(100% - 280px);
+}
+
+/* When sidebar is CLOSED */
+.sidebarClosed {
   margin-left: 0;
-  transition: margin-left 0.3s ease;
+  width: 100%;
 }
 
 .content {
   flex: 1;
-  padding: 0;
+  padding: 24px;
   overflow-y: auto;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 80px);
 }
 
-/* When sidebar is open on mobile */
+/* Mobile Styles */
 @media (max-width: 768px) {
   .mainContent {
-    margin-left: 0;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
   
-  .sidebarOpen .mainContent {
-    margin-left: 250px;
+  .content {
+    padding: 16px;
   }
 }

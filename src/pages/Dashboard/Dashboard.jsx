@@ -1,113 +1,166 @@
+// pages/Dashboard.jsx (Updated)
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { getPatients, getMonitoringHistory } from '../../services/patientService';
-import { seedDummyData } from '../../utils/seedData'; // ✅ IMPORT SEED FUNCTION
+import { useAlerts } from '../../hooks/useAlerts'; // ✅ Import yang benar
+import { getMonitoringHistory, getRealtimeVitals } from '../../services/patientService';
 import StatsCard from '../../components/Ui/StatsCard';
+import ECGChart from '../../components/Charts/ECGChart';
+import ConnectionStatus from '../../components/Ui/ConnectionStatus';
 import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({
-    totalPatients: 0,
-    criticalPatients: 0,
-    averageHR: 0,
-    connectedDevices: 0
+  const { checkVitals } = useAlerts(); // ✅ Gunakan hook
+  const [vitals, setVitals] = useState({
+    heartRate: '--',
+    spO2: '--',
+    temperature: '--',
+    ecgData: [],
+    status: 'normal',
+    deviceConnected: false,
+    lastUpdate: null
   });
-  const [recentPatients, setRecentPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [seeding, setSeeding] = useState(false); // ✅ SEEDING STATE
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+    
+    let interval;
+    if (autoRefresh) {
+      interval = setInterval(() => {
+        loadDashboardData();
+      }, 5000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [autoRefresh]);
 
   const loadDashboardData = async () => {
     try {
       setError('');
       
-      // Get real patients data from Firebase
-      const patients = await getPatients();
+      // Ambil data real-time
+      const realtimeData = await getRealtimeVitals(user.uid);
       
-      // Get recent vitals for calculating average heart rate
-      const recentVitals = await getMonitoringHistory({ limit: 100 });
-      
-      // Calculate statistics
-      const criticalPatients = patients.filter(patient => 
-        patient.status === 'critical'
-      ).length;
-      
-      // Calculate average heart rate from recent vitals
-      const averageHR = recentVitals.length > 0 
-        ? Math.round(recentVitals.reduce((sum, vital) => sum + (vital.hr || 0), 0) / recentVitals.length)
-        : 0;
-      
-      // Get unique connected devices
-      const connectedDevices = [...new Set(
-        patients
-          .map(patient => patient.deviceId)
-          .filter(deviceId => deviceId && deviceId.trim() !== '')
-      )].length;
-
-      // Update stats
-      setStats({
-        totalPatients: patients.length,
-        criticalPatients,
-        averageHR,
-        connectedDevices
+      // Ambil history untuk ECG chart
+      const historyData = await getMonitoringHistory({ 
+        uid: user.uid, 
+        limit: 50 
       });
 
-      // Prepare recent patients data (last 5 patients)
-      const recentPatientsData = patients.slice(0, 5).map(patient => {
-        // Find the latest vital for this patient
-        const patientVitals = recentVitals.filter(vital => vital.uid === patient.id);
-        const latestVital = patientVitals[0] || {};
-        
-        return {
-          id: patient.id,
-          name: patient.name || 'Unknown Patient',
-          status: patient.status || 'normal',
-          lastHR: latestVital.hr || '--',
-          lastUpdate: latestVital.timestamp 
-            ? `${Math.round((new Date() - latestVital.timestamp) / (1000 * 60))} min ago`
-            : 'No data'
-        };
-      });
+      // Process ECG data untuk chart
+      const ecgData = historyData.map(record => ({
+        time: record.timestamp ? new Date(record.timestamp).toLocaleTimeString() : '',
+        value: record.hr || 0
+      }));
 
-      setRecentPatients(recentPatientsData);
+      // Tentukan status kesehatan
+      const status = determineHealthStatus(
+        realtimeData.heartRate, 
+        realtimeData.spO2, 
+        realtimeData.temperature
+      );
 
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-      setError('Failed to load dashboard data. Please try again.');
+      const newVitals = {
+        heartRate: realtimeData.heartRate || '--',
+        spO2: realtimeData.spO2 || '--',
+        temperature: realtimeData.temperature || '--',
+        ecgData: ecgData,
+        status: status,
+        deviceConnected: !!realtimeData.deviceId,
+        deviceId: realtimeData.deviceId || 'Not Connected',
+        lastUpdate: realtimeData.timestamp || new Date()
+      };
+
+      setVitals(newVitals);
+
+      // ✅ Check alerts dengan data yang valid
+      if (realtimeData.heartRate && realtimeData.spO2 && realtimeData.temperature) {
+        checkVitals({
+          heartRate: parseInt(realtimeData.heartRate) || 0,
+          spO2: parseInt(realtimeData.spO2) || 0,
+          temperature: parseFloat(realtimeData.temperature) || 0,
+          deviceConnected: !!realtimeData.deviceId
+        }, {
+          id: user.uid,
+          name: user.name || user.email,
+          deviceId: realtimeData.deviceId
+        });
+      }
+
+    } catch (err) {
+      console.error('Dashboard error:', err);
+      setError('Gagal memuat data monitoring. Menggunakan data simulasi.');
       
-      // Fallback to mock data if Firebase fails
-      setStats({
-        totalPatients: 0,
-        criticalPatients: 0,
-        averageHR: 0,
-        connectedDevices: 0
+      // Fallback ke data dummy
+      const dummyData = getDummyData();
+      setVitals(dummyData);
+      
+      // ✅ Check alerts untuk dummy data juga
+      checkVitals({
+        heartRate: parseInt(dummyData.heartRate) || 0,
+        spO2: parseInt(dummyData.spO2) || 0,
+        temperature: parseFloat(dummyData.temperature) || 0,
+        deviceConnected: dummyData.deviceConnected
+      }, {
+        id: user.uid,
+        name: user.name || user.email,
+        deviceId: dummyData.deviceId
       });
-      setRecentPatients([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ HANDLE SEED DATA FUNCTION
-  const handleSeedData = async () => {
-    setSeeding(true);
-    try {
-      await seedDummyData();
-      // Reload dashboard data after seeding
-      await loadDashboardData();
-      alert('✅ Dummy data berhasil dibuat! Dashboard akan diperbarui.');
-    } catch (error) {
-      console.error('Error seeding data:', error);
-      alert('❌ Gagal membuat dummy data: ' + error.message);
-    } finally {
-      setSeeding(false);
+  const determineHealthStatus = (hr, spO2, temp) => {
+    const heartRate = parseInt(hr);
+    const oxygen = parseInt(spO2);
+    const temperature = parseFloat(temp);
+
+    if (isNaN(heartRate) || isNaN(oxygen) || isNaN(temperature)) {
+      return 'normal';
     }
+
+    if (heartRate > 120 || heartRate < 50 || oxygen < 90 || temperature > 38.5) {
+      return 'critical';
+    } else if (heartRate > 100 || heartRate < 60 || oxygen < 95 || temperature > 37.5) {
+      return 'warning';
+    }
+    return 'normal';
+  };
+
+  const getDummyData = () => {
+    const heartRate = Math.floor(Math.random() * 40) + 60; // 60-100 BPM
+    const spO2 = Math.floor(Math.random() * 6) + 95; // 95-100%
+    const temperature = (Math.random() * 1.5) + 36.5; // 36.5-38°C
+    
+    return {
+      heartRate,
+      spO2,
+      temperature: temperature.toFixed(1),
+      ecgData: Array.from({ length: 20 }, (_, i) => ({
+        time: `${i}s`,
+        value: heartRate + Math.sin(i) * 10
+      })),
+      status: determineHealthStatus(heartRate, spO2, temperature),
+      deviceConnected: true,
+      deviceId: 'ESP32-A1B2C3',
+      lastUpdate: new Date()
+    };
+  };
+
+  const formatLastUpdate = (timestamp) => {
+    if (!timestamp) return 'Never';
+    const now = new Date();
+    const diff = (now - new Date(timestamp)) / 1000;
+    
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+    return new Date(timestamp).toLocaleTimeString();
   };
 
   if (loading) {
@@ -115,7 +168,7 @@ export default function Dashboard() {
       <div className={styles.dashboard}>
         <div className={styles.loading}>
           <div className={styles.spinner}></div>
-          Loading dashboard...
+          <p>Loading real-time monitoring...</p>
         </div>
       </div>
     );
@@ -123,154 +176,127 @@ export default function Dashboard() {
 
   return (
     <div className={styles.dashboard}>
+      {/* Header dengan Connection Status */}
       <div className={styles.header}>
-        <h1>Dashboard</h1>
-        <p>Welcome back, {user?.email}</p>
+        <div className={styles.headerLeft}>
+          <h1>Real-Time Monitoring</h1>
+          <p>Monitoring kesehatan jantung pasien secara real-time</p>
+        </div>
+        <div className={styles.headerRight}>
+          <ConnectionStatus 
+            isConnected={vitals.deviceConnected}
+            deviceId={vitals.deviceId}
+            lastUpdate={vitals.lastUpdate}
+          />
+        </div>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className={styles.errorMessage}>
-          {error}
+          ⚠️ {error}
         </div>
       )}
 
-      {/* Stats Grid */}
-      <div className={styles.statsGrid}>
-        <StatsCard
-          title="Total Patients"
-          value={stats.totalPatients}
-          icon="👥"
-          color="blue"
-        />
-        <StatsCard
-          title="Critical Patients"
-          value={stats.criticalPatients}
-          icon="⚠️"
+      {/* Health Status Banner */}
+      <div className={`${styles.statusBanner} ${styles[vitals.status]}`}>
+        <div className={styles.statusContent}>
+          <span className={styles.statusIcon}>
+            {vitals.status === 'critical' ? '🚨' : 
+             vitals.status === 'warning' ? '⚠️' : '✅'}
+          </span>
+          <div>
+            <h3>
+              {vitals.status === 'critical' ? 'Kondisi Kritis' : 
+               vitals.status === 'warning' ? 'Perhatian Diperlukan' : 'Kondisi Normal'}
+            </h3>
+            <p>
+              {vitals.status === 'critical' ? 'Segera berikan pertolongan medis!' : 
+               vitals.status === 'warning' ? 'Pantau kondisi pasien dengan ketat' : 
+               'Semua parameter dalam batas normal'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Vital Signs Grid */}
+      <div className={styles.vitalsGrid}>
+        <StatsCard 
+          title="Detak Jantung" 
+          value={`${vitals.heartRate} BPM`} 
+          icon="❤️" 
           color="red"
+          status={vitals.status}
+          subtitle="Heart Rate"
         />
-        <StatsCard
-          title="Avg Heart Rate"
-          value={`${stats.averageHR} BPM`}
-          icon="❤️"
-          color="green"
+        <StatsCard 
+          title="Saturasi Oksigen" 
+          value={`${vitals.spO2}%`} 
+          icon="🫁" 
+          color="blue"
+          status={vitals.status}
+          subtitle="SpO₂"
         />
-        <StatsCard
-          title="Connected Devices"
-          value={stats.connectedDevices}
-          icon="📱"
-          color="purple"
+        <StatsCard 
+          title="Suhu Tubuh" 
+          value={`${vitals.temperature}°C`} 
+          icon="🌡️" 
+          color="orange"
+          status={vitals.status}
+          subtitle="Body Temperature"
+        />
+        <StatsCard 
+          title="Status Device" 
+          value={vitals.deviceConnected ? "Connected" : "Disconnected"} 
+          icon="📱" 
+          color={vitals.deviceConnected ? "green" : "gray"}
+          subtitle={vitals.deviceId}
         />
       </div>
 
-      {/* Quick Actions & Recent Patients */}
-      <div className={styles.contentGrid}>
-        <div className={styles.quickActions}>
-          <h2>Quick Actions</h2>
-          <div className={styles.actionButtons}>
-            <Link to="/patients" className={styles.actionButton}>
-              <span>👥</span>
-              View All Patients
-            </Link>
-            <Link to="/monitor" className={styles.actionButton}>
-              <span>❤️</span>
-              Real-time Monitor
-            </Link>
-            <Link to="/history" className={styles.actionButton}>
-              <span>📈</span>
-              View History
-            </Link>
-          </div>
+      {/* ECG Chart Section */}
+      <div className={styles.chartSection}>
+        <div className={styles.sectionHeader}>
+          <h2>Grafik Sinyal EKG</h2>
+          <span className={styles.lastUpdate}>
+            Update: {formatLastUpdate(vitals.lastUpdate)}
+          </span>
         </div>
+        <div className={styles.chartContainer}>
+          <ECGChart data={vitals.ecgData} />
+        </div>
+      </div>
 
-        <div className={styles.recentPatients}>
-          <div className={styles.sectionHeader}>
-            <h2>Recent Patients</h2>
-            <Link to="/patients" className={styles.seeAll}>
-              See All →
-            </Link>
-          </div>
+      {/* Control Panel */}
+      <div className={styles.controlPanel}>
+        <div className={styles.controlGroup}>
+          <label className={styles.toggleLabel}>
+            <input 
+              type="checkbox" 
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              className={styles.toggleInput}
+            />
+            <span className={styles.toggleSlider}></span>
+            Auto Refresh (5s)
+          </label>
           
-          {recentPatients.length > 0 ? (
-            <div className={styles.patientsList}>
-              {recentPatients.map(patient => (
-                <div key={patient.id} className={styles.patientCard}>
-                  <div className={styles.patientInfo}>
-                    <h4>{patient.name}</h4>
-                    <span className={`${styles.status} ${styles[patient.status]}`}>
-                      {patient.status}
-                    </span>
-                  </div>
-                  <div className={styles.patientStats}>
-                    <span>HR: {patient.lastHR} BPM</span>
-                    <small>{patient.lastUpdate}</small>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className={styles.emptyState}>
-              <p>No patient data available</p>
-              <small>Click the button below to generate sample data</small>
-            </div>
-          )}
+          <button 
+            onClick={loadDashboardData}
+            disabled={loading}
+            className={styles.refreshButton}
+          >
+            {loading ? (
+              <>
+                <span className={styles.miniSpinner}></span>
+                Refreshing...
+              </>
+            ) : (
+              <>
+                🔄 Refresh Now
+              </>
+            )}
+          </button>
         </div>
-      </div>
-
-      {/* Alert Section */}
-      {stats.criticalPatients > 0 && (
-        <div className={styles.alertSection}>
-          <div className={styles.alert}>
-            <span className={styles.alertIcon}>⚠️</span>
-            <div className={styles.alertContent}>
-              <strong>Attention Needed</strong>
-              <p>You have {stats.criticalPatients} patient(s) requiring immediate attention.</p>
-            </div>
-            <Link to="/patients" className={styles.alertButton}>
-              View Patients
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* ✅ DEVELOPMENT TOOLS - SEED DATA BUTTON */}
-      {import.meta.env.DEV &&  (
-        <div className={styles.devTools}>
-          <div className={styles.seedSection}>
-            <h3>Development Tools</h3>
-            <p>Generate sample data for testing</p>
-            <button 
-              onClick={handleSeedData}
-              disabled={seeding}
-              className={styles.seedButton}
-            >
-              {seeding ? (
-                <>
-                  <span className={styles.spinner}></span>
-                  Generating Data...
-                </>
-              ) : (
-                <>
-                  🌱 Seed Sample Data
-                </>
-              )}
-            </button>
-            <small className={styles.seedNote}>
-              Will create 4 patients and 144 vital records
-            </small>
-          </div>
-        </div>
-      )}
-
-      {/* Refresh Button */}
-      <div className={styles.refreshSection}>
-        <button 
-          onClick={loadDashboardData}
-          className={styles.refreshButton}
-          disabled={loading}
-        >
-          {loading ? 'Refreshing...' : '🔄 Refresh Data'}
-        </button>
       </div>
     </div>
   );

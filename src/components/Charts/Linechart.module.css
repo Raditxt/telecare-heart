@@ -1,0 +1,27 @@
+.lineChart {
+  width: 100%;
+  position: relative;
+}
+
+/* Custom tooltip styling */
+.lineChart :global(.recharts-tooltip-wrapper) {
+  outline: none;
+}
+
+.lineChart :global(.recharts-default-tooltip) {
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .lineChart {
+    height: 250px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .lineChart {
+    height: 200px !important;
+  }
+}

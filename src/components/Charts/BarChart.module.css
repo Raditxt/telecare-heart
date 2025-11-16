@@ -1,0 +1,32 @@
+.barChart {
+  width: 100%;
+  position: relative;
+}
+
+/* Custom tooltip styling */
+.barChart :global(.recharts-tooltip-wrapper) {
+  outline: none;
+}
+
+.barChart :global(.recharts-default-tooltip) {
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Bar hover effects */
+.barChart :global(.recharts-bar-rectangle:hover) {
+  opacity: 0.8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .barChart {
+    height: 250px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .barChart {
+    height: 200px !important;
+  }
+}
