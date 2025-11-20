@@ -3,9 +3,17 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  signOut 
+  signOut,
+  updatePassword,
+  updateProfile,
+  EmailAuthProvider,
+  reauthenticateWithCredential
 } from "firebase/auth";
-import { createUserProfile } from './userService';
+import { 
+  createUserProfile, 
+  updateUserProfile as updateUserProfileInFirestore,
+  updateUserPreferences as updateUserPreferencesInFirestore 
+} from './userService'; // ✅ Import yang diperbaiki
 
 export const login = async (email, password) => {
   try {
@@ -88,4 +96,98 @@ export const logout = async () => {
   } catch (error) {
     throw new Error(error.message);
   }
+};
+
+// 🔧 FUNGSI UPDATE PROFILE YANG DIPERBAIKI
+
+export const updateUserProfile = async (profileData) => {
+  try {
+    const user = auth.currentUser;
+    
+    if (!user) {
+      throw new Error("No user is currently signed in");
+    }
+
+    // Update Firebase Auth profile
+    if (profileData.displayName) {
+      await updateProfile(user, {
+        displayName: profileData.displayName
+      });
+    }
+
+    // Update Firestore user profile
+    const firestoreData = {
+      name: profileData.displayName || profileData.name,
+      phoneNumber: profileData.phoneNumber,
+      department: profileData.department,
+      updatedAt: new Date()
+    };
+
+    await updateUserProfileInFirestore(user.uid, firestoreData); // ✅ Sekarang fungsi ini tersedia
+    
+    return { success: true, message: "Profile updated successfully" };
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    throw new Error(`Failed to update profile: ${error.message}`);
+  }
+};
+
+export const changePassword = async (currentPassword, newPassword) => {
+  try {
+    const user = auth.currentUser;
+    
+    if (!user) {
+      throw new Error("No user is currently signed in");
+    }
+
+    // Re-authenticate user before changing password
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+
+    // Change password
+    await updatePassword(user, newPassword);
+    
+    return { success: true, message: "Password changed successfully" };
+  } catch (error) {
+    console.error("Error changing password:", error);
+    
+    let errorMessage = "Failed to change password";
+    if (error.code === 'auth/wrong-password') {
+      errorMessage = "Current password is incorrect";
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = "New password is too weak";
+    } else if (error.code === 'auth/requires-recent-login') {
+      errorMessage = "Please log in again to change your password";
+    }
+    
+    throw new Error(errorMessage);
+  }
+};
+
+export const updateUserPreferences = async (preferences) => {
+  try {
+    const user = auth.currentUser;
+    
+    if (!user) {
+      throw new Error("No user is currently signed in");
+    }
+
+    // Update preferences in Firestore menggunakan fungsi terpisah
+    await updateUserPreferencesInFirestore(user.uid, preferences); // ✅ Sekarang fungsi ini tersedia
+    
+    return { success: true, message: "Preferences updated successfully" };
+  } catch (error) {
+    console.error("Error updating preferences:", error);
+    throw new Error(`Failed to update preferences: ${error.message}`);
+  }
+};
+
+// Helper function to get current user
+export const getCurrentUser = () => {
+  return auth.currentUser;
+};
+
+// Helper function to check if user is logged in
+export const isUserLoggedIn = () => {
+  return !!auth.currentUser;
 };
