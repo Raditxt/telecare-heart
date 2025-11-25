@@ -3,7 +3,7 @@
   flex-direction: column;
   min-height: 100vh;
   width: 100%;
-  background-color: #ffffff;
+  background: linear-gradient(135deg, #f0fdfa 0%, #ecfdf5 100%);
   position: relative;
   overflow: hidden;
 }
@@ -37,11 +37,6 @@
 .formColumnMobile {
   width: 100%;
   padding: 24px;
-}
-
-.formColumnTablet {
-  width: 50%;
-  padding: 32px;
 }
 
 .formColumnDesktop {
@@ -89,28 +84,42 @@
 
 /* Messages */
 .errorMessage {
-  background-color: #fee2e2;
-  border: 1px solid #fca5a5;
-  color: #991b1b;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
   padding: 12px 16px;
   border-radius: 8px;
   margin-bottom: 16px;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.errorIcon {
+  font-size: 16px;
 }
 
 .successMessage {
-  background-color: #d1fae5;
-  border: 1px solid #6ee7b7;
-  color: #065f46;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
   padding: 12px 16px;
   border-radius: 8px;
   margin-bottom: 16px;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.successIcon {
+  font-size: 16px;
 }
 
 /* Form Elements */
 .formGroup {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .label {
@@ -130,7 +139,6 @@
   outline: none;
   transition: all 0.2s;
   background-color: #ffffff;
-  cursor: text;
 }
 
 .input:focus {
@@ -149,7 +157,7 @@
   background-color: #0d9488;
   color: #ffffff;
   font-weight: 600;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
@@ -158,25 +166,155 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
-.button:hover {
+.button:hover:not(:disabled) {
   background-color: #0f766e;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .buttonDisabled {
-  background-color: #5eead4;
+  background-color: #9ca3af;
   cursor: not-allowed;
+  transform: none;
   box-shadow: none;
 }
 
-.buttonDisabled:hover {
-  background-color: #5eead4;
-  transform: none;
-  box-shadow: none;
+/* Demo Section */
+.demoSection {
+  margin-bottom: 24px;
+}
+
+.demoDivider {
+  text-align: center;
+  position: relative;
+  margin: 20px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.demoDivider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e7eb;
+  z-index: 1;
+}
+
+.demoDivider span {
+  background: white;
+  padding: 0 12px;
+  position: relative;
+  z-index: 2;
+}
+
+.demoButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.demoButton {
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.demoButton:hover:not(:disabled) {
+  border-color: #0d9488;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.demoButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.demoDoctor:hover:not(:disabled) {
+  border-color: #3b82f6;
+}
+
+.demoFamily:hover:not(:disabled) {
+  border-color: #8b5cf6;
+}
+
+.demoIcon {
+  font-size: 16px;
+}
+
+/* Register Link */
+.registerLink {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: #6b7280;
+  padding: 16px 0;
+  border-top: 1px solid #f3f4f6;
+}
+
+.link {
+  color: #0d9488;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: #0f766e;
+}
+
+/* Info Section */
+.info {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 24px;
+}
+
+.infoTitle {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.infoItems {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.infoIcon {
+  font-size: 14px;
+  margin-top: 1px;
+  flex-shrink: 0;
 }
 
 /* Sidebar */
@@ -240,6 +378,7 @@
 .sidebarText {
   opacity: 0.9;
   line-height: 1.6;
+  margin-bottom: 32px;
 }
 
 .sidebarTextTablet {
@@ -250,76 +389,67 @@
   font-size: 24px;
 }
 
-/* Demo Info */
-.demoInfo {
-  margin-top: 32px;
-  padding: 16px;
-  background-color: #f9fafb;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+.features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  text-align: left;
 }
 
-.demoTitle {
-  font-size: 12px;
-  color: #4b5563;
-  text-align: center;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.demoText {
-  font-size: 12px;
-  color: #6b7280;
-  text-align: center;
-  margin: 4px 0;
-}
-
-/* Animation */
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.spinner {
-  animation: spin 1s linear infinite;
-  width: 20px;
-  height: 20px;
-  margin-right: 12px;
-}
-
-/* ... existing styles ... */
-
-/* Register Link Styles */
-.registerLink {
-  margin-top: 24px;
-  text-align: center;
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-size: 14px;
-  color: #6b7280;
+  opacity: 0.9;
 }
 
-.link {
-  color: #0d9488;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s;
+.featureIcon {
+  font-size: 16px;
+  flex-shrink: 0;
 }
 
-.link:hover {
-  text-decoration: underline;
-  color: #0f766e;
+/* Spinner */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-/* Responsive adjustments for register link */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .registerLink {
-    margin-top: 20px;
+  .features {
+    grid-template-columns: 1fr;
+  }
+  
+  .demoButtons {
+    gap: 8px;
+  }
+  
+  .demoButton {
+    padding: 10px 12px;
     font-size: 13px;
   }
 }
 
 @media (max-width: 480px) {
-  .registerLink {
-    margin-top: 16px;
+  .formColumnMobile {
+    padding: 20px;
+  }
+  
+  .titleMobile {
+    font-size: 26px;
+  }
+  
+  .infoItem {
     font-size: 12px;
   }
 }

@@ -17,10 +17,11 @@ class MySQLService {
         database: process.env.MYSQL_DATABASE || 'telecare_heart',
         waitForConnections: true,
         connectionLimit: 10,
-        queueLimit: 0,
-        acquireTimeout: 60000,
-        timeout: 60000,
-        reconnect: true
+        queueLimit: 0
+        // Hapus configuration options yang tidak valid:
+        // acquireTimeout: 60000,    // Tidak valid untuk mysql2
+        // timeout: 60000,          // Tidak valid untuk mysql2  
+        // reconnect: true          // Tidak valid untuk mysql2
       });
 
       console.log('✅ MySQL connection pool created');
