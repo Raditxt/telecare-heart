@@ -1,7 +1,7 @@
 // src/contexts/AuthProvider.jsx
 import React, { useState, useEffect } from 'react';
-import { authService } from '../services/authService';
 import { AuthContext } from './AuthContext';
+import { authService } from '../services/authService';
 
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -79,30 +79,59 @@ export default function AuthProvider({ children }) {
     }
   };
 
+  // 🔐 PERMISSION LOGIC YANG DIPERBARUI
   const hasPermission = (requiredRole = null, patientId = null) => {
     if (!user) return false;
 
-    // Admin bisa akses semua
+    console.log('🔐 Permission check:', {
+      userRole: user.role,
+      requiredRole,
+      patientId,
+      assignedPatients: user.assignedPatients
+    });
+
+    // 1. Admin bisa akses semua
     if (user.role === 'admin') return true;
 
-    // Check role permission
+    // 2. Check jika role tidak sesuai
     if (requiredRole && user.role !== requiredRole) {
+      console.log(`🚫 Role mismatch: user is ${user.role}, required ${requiredRole}`);
       return false;
     }
 
-    // Doctor bisa akses semua patient yang di-assign
-    if (user.role === 'doctor') {
-      if (!patientId) return true; // Akses general
-      return user.assignedPatients?.includes(patientId);
+    // 3. Untuk halaman general (tanpa patientId)
+    if (!patientId) {
+      // Doctor bisa akses semua halaman general
+      if (user.role === 'doctor') return true;
+      
+      // Family hanya bisa akses route family-* dan beberapa umum
+      if (user.role === 'family') {
+        const currentPath = window.location.pathname;
+        const allowedRoutes = [
+          '/family-dashboard',
+          '/family/patients',
+          '/family/history',
+          '/family/profile',
+          '/system-test'
+        ];
+        
+        const isAllowed = allowedRoutes.some(route => currentPath.startsWith(route));
+        console.log(`👥 Family route check: ${currentPath} -> ${isAllowed}`);
+        return isAllowed;
+      }
+      
+      return true;
     }
 
-    // Family hanya bisa akses patient yang terkait
+    // 4. Untuk halaman dengan patientId
     if (user.role === 'family') {
-      if (!patientId) return false; // Tidak bisa akses general patient list
-      return user.assignedPatients?.includes(patientId);
+      const hasAccess = user.assignedPatients?.includes(patientId);
+      console.log(`👥 Family patient access: ${patientId} -> ${hasAccess}`);
+      return hasAccess;
     }
 
-    return false;
+    // Doctor dan admin bisa akses semua patient
+    return true;
   };
 
   // Helper function untuk check jika user adalah doctor
@@ -143,6 +172,21 @@ export default function AuthProvider({ children }) {
     return roleMap[user.role] || user.role;
   };
 
+  // Check jika user memiliki akses ke patient tertentu
+  const canAccessPatient = (patientId) => {
+    return hasPermission(null, patientId);
+  };
+
+  // Check jika user bisa mengelola data (create, update, delete)
+  const canManageData = () => {
+    return user?.role === 'admin' || user?.role === 'doctor';
+  };
+
+  // Check jika user hanya bisa read-only
+  const isReadOnly = () => {
+    return user?.role === 'family';
+  };
+
   const value = {
     user,
     loading,
@@ -156,7 +200,10 @@ export default function AuthProvider({ children }) {
     isFamily,
     isAdmin,
     getDisplayName,
-    getRoleDisplay
+    getRoleDisplay,
+    canAccessPatient,
+    canManageData,
+    isReadOnly
   };
 
   return (

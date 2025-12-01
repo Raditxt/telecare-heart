@@ -54,6 +54,12 @@ export default function Login() {
       return;
     }
 
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError("Format email tidak valid");
+      setIsLoading(false);
+      return;
+    }
+
     if (!password.trim()) {
       setError("Password harus diisi");
       setIsLoading(false);
@@ -64,71 +70,24 @@ export default function Login() {
       const result = await login(email, password);
       
       if (result.success) {
-        setSuccessMessage(`Login berhasil! Selamat datang ${result.user.role === 'doctor' ? 'Dokter' : ''} ${result.user.name}.`);
+        const roleDisplay = result.user.role === 'doctor' ? 'Dokter' : 
+                           result.user.role === 'family' ? 'Keluarga Pasien' : 'Pengguna';
+        
+        setSuccessMessage(`Login berhasil! Selamat datang ${roleDisplay} ${result.user.name}.`);
         
         // Redirect berdasarkan role
         setTimeout(() => {
           navigate("/dashboard", { 
             state: { 
-              welcomeMessage: `Selamat datang ${result.user.role === 'doctor' ? 'Dokter' : ''} ${result.user.name}!` 
+              welcomeMessage: `Selamat datang ${roleDisplay} ${result.user.name}!` 
             } 
           });
-        }, 1000);
+        }, 1500);
       } else {
-        setError(result.error || "Gagal login. Periksa email dan password Anda.");
+        setError(result.error || "Email atau password salah. Silakan coba lagi.");
       }
     } catch {
       setError("Terjadi kesalahan saat login. Silakan coba lagi.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async (role) => {
-    setError("");
-    setSuccessMessage("");
-    setIsLoading(true);
-
-    let demoEmail, demoPassword, demoRole;
-    
-    switch (role) {
-      case 'doctor':
-        demoEmail = "dr.tony@hospital.com";
-        demoPassword = "password123";
-        demoRole = "Dokter";
-        break;
-      case 'family':
-        demoEmail = "peter.parker@gmail.com";
-        demoPassword = "password123";
-        demoRole = "Keluarga Pasien";
-        break;
-      default:
-        demoEmail = "test@example.com";
-        demoPassword = "password123";
-        demoRole = "Pengguna";
-    }
-
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-
-    try {
-      const result = await login(demoEmail, demoPassword);
-      
-      if (result.success) {
-        setSuccessMessage(`Demo login berhasil! Selamat datang ${demoRole}.`);
-        
-        setTimeout(() => {
-          navigate("/dashboard", { 
-            state: { 
-              welcomeMessage: `Demo login berhasil! Selamat datang ${demoRole}.` 
-            } 
-          });
-        }, 1000);
-      } else {
-        setError(`Demo login gagal. ${result.error}`);
-      }
-    } catch {
-      setError("Demo login gagal. Pastikan backend server berjalan.");
     } finally {
       setIsLoading(false);
     }
@@ -144,11 +103,14 @@ export default function Login() {
             
             {/* Header */}
             <div className={styles.header}>
-              <h1 className={`${styles.title} ${isDesktop ? styles.titleDesktop : styles.titleMobile}`}>
-                TeleCare-Heart
-              </h1>
+              <div className={styles.logo}>
+                <div className={styles.heartLogo}>❤️</div>
+                <h1 className={`${styles.title} ${isDesktop ? styles.titleDesktop : styles.titleMobile}`}>
+                  TeleCare-Heart
+                </h1>
+              </div>
               <p className={`${styles.subtitle} ${isDesktop ? styles.subtitleDesktop : styles.subtitleMobile}`}>
-                Masuk ke Akun Anda
+                Sistem Monitoring Kesehatan Jantung Terintegrasi
               </p>
             </div>
 
@@ -169,15 +131,15 @@ export default function Login() {
             )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className={styles.form}>
               <div className={styles.formGroup}>
                 <label htmlFor="email" className={styles.label}>
-                  Email *
+                  Alamat Email
                 </label>
                 <input
                   id="email"
                   type="email"
-                  placeholder="contoh@domain.com"
+                  placeholder="masukkan.email@domain.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
@@ -188,7 +150,7 @@ export default function Login() {
 
               <div className={styles.formGroup}>
                 <label htmlFor="password" className={styles.label}>
-                  Password *
+                  Kata Sandi
                 </label>
                 <input
                   id="password"
@@ -211,70 +173,30 @@ export default function Login() {
                 {isLoading ? (
                   <>
                     <span className={styles.spinner}></span>
-                    Memproses...
+                    Sedang Masuk...
                   </>
                 ) : (
-                  'Masuk ke Akun'
+                  'Masuk ke Sistem'
                 )}
               </button>
             </form>
 
-            {/* Demo Login Buttons */}
-            <div className={styles.demoSection}>
-              <div className={styles.demoDivider}>
-                <span>Atau coba demo</span>
-              </div>
-              
-              <div className={styles.demoButtons}>
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin('doctor')}
-                  disabled={isLoading}
-                  className={`${styles.demoButton} ${styles.demoDoctor}`}
-                >
-                  <span className={styles.demoIcon}>👨‍⚕️</span>
-                  Login sebagai Dokter
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin('family')}
-                  disabled={isLoading}
-                  className={`${styles.demoButton} ${styles.demoFamily}`}
-                >
-                  <span className={styles.demoIcon}>👪</span>
-                  Login sebagai Keluarga
-                </button>
-              </div>
-            </div>
-
             {/* Register Link */}
             <div className={styles.registerLink}>
               <p>
-                Belum punya akun?{' '}
+                Belum memiliki akun?{' '}
                 <Link to="/register" className={styles.link}>
-                  Daftar akun baru
+                  Daftar di sini
                 </Link>
               </p>
             </div>
 
-            {/* Info */}
-            <div className={styles.info}>
-              <div className={styles.infoTitle}>Akses Berdasarkan Peran:</div>
-              <div className={styles.infoItems}>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoIcon}>👨‍⚕️</span>
-                  <span>
-                    <strong>Dokter:</strong> Pantau pasien, analisis data, berikan rekomendasi
-                  </span>
-                </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoIcon}>👪</span>
-                  <span>
-                    <strong>Keluarga:</strong> Pantau kesehatan anggota keluarga, terima notifikasi
-                  </span>
-                </div>
-              </div>
+            {/* Security Info */}
+            <div className={styles.securityInfo}>
+              <div className={styles.securityIcon}>🔒</div>
+              <p className={styles.securityText}>
+                Data Anda dilindungi dengan sistem keamanan terenkripsi
+              </p>
             </div>
           </div>
         </div>
@@ -284,38 +206,61 @@ export default function Login() {
           <div className={`${styles.sidebar} ${isDesktop ? styles.sidebarDesktop : styles.sidebarTablet}`}>
             <div className={styles.sidebarContent}>
               
-              <div className={styles.heartIcon}>
-                <div className={styles.iconContainer}>
-                  <svg className={styles.icon} fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                  </svg>
+              <div className={styles.medicalIllustration}>
+                <div className={styles.heartMonitor}>
+                  <div className={styles.monitorScreen}>
+                    <div className={styles.heartLine}></div>
+                  </div>
+                  <div className={styles.monitorBase}></div>
                 </div>
               </div>
 
               <h2 className={`${styles.sidebarTitle} ${isDesktop ? styles.sidebarTitleDesktop : styles.sidebarTitleTablet}`}>
-                Sistem Monitoring Jantung Digital
+                Monitoring Kesehatan Jantung Real-time
               </h2>
               
               <p className={`${styles.sidebarText} ${isDesktop ? styles.sidebarTextDesktop : styles.sidebarTextTablet}`}>
-                Platform terintegrasi untuk memantau kesehatan jantung pasien secara real-time dengan dukungan multi-role access.
+                Platform canggih untuk memantau kondisi jantung pasien dengan teknologi terkini dan akses multi-peran yang aman.
               </p>
 
-              <div className={styles.features}>
-                <div className={styles.feature}>
-                  <span className={styles.featureIcon}>🔒</span>
-                  <span>Akses aman berdasarkan peran</span>
+              <div className={styles.benefits}>
+                <div className={styles.benefitItem}>
+                  <span className={styles.benefitIcon}>📈</span>
+                  <div className={styles.benefitContent}>
+                    <h4>Data Real-time</h4>
+                    <p>Pantau detak jantung, SpO2, dan suhu tubuh secara live</p>
+                  </div>
                 </div>
-                <div className={styles.feature}>
-                  <span className={styles.featureIcon}>📊</span>
-                  <span>Data real-time 24/7</span>
+                
+                <div className={styles.benefitItem}>
+                  <span className={styles.benefitIcon}>👨‍⚕️</span>
+                  <div className={styles.benefitContent}>
+                    <h4>Kolaborasi Tim Medis</h4>
+                    <p>Dokter dan keluarga dapat memantau bersama</p>
+                  </div>
                 </div>
-                <div className={styles.feature}>
-                  <span className={styles.featureIcon}>👨‍⚕️</span>
-                  <span>Kolaborasi dokter & keluarga</span>
+                
+                <div className={styles.benefitItem}>
+                  <span className={styles.benefitIcon}>🚨</span>
+                  <div className={styles.benefitContent}>
+                    <h4>Peringatan Dini</h4>
+                    <p>Sistem notifikasi otomatis untuk kondisi kritis</p>
+                  </div>
                 </div>
-                <div className={styles.feature}>
-                  <span className={styles.featureIcon}>🚨</span>
-                  <span>Sistem peringatan dini</span>
+              </div>
+
+              <div className={styles.trustBadges}>
+                <div className={styles.trustItem}>
+                  <span className={styles.trustIcon}>🏥</span>
+                  <span>Standar Medis</span>
+                </div>
+                <div className={styles.trustItem}>
+                  <span className={styles.trustIcon}>🔐</span>
+                  <span>Data Terenkripsi</span>
+                </div>
+                <div className={styles.trustItem}>
+                  <span className={styles.trustIcon}>📱</span>
+                  <span>Akses 24/7</span>
                 </div>
               </div>
             </div>

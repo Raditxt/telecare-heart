@@ -1,5 +1,4 @@
-/* components/Layout/Topbar.module.css */
-.topbar {
+.topBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -10,6 +9,8 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  height: 80px;
+  box-sizing: border-box;
 }
 
 .leftSection {
@@ -21,18 +22,32 @@
 .menuButton {
   background: none;
   border: none;
-  font-size: 1.2rem;
   cursor: pointer;
   padding: 8px;
   border-radius: 6px;
   transition: background-color 0.2s;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .menuButton:hover {
   background: #f3f4f6;
 }
 
-.appTitle {
+.menuIcon {
+  font-size: 1.2rem;
+  color: #374151;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+}
+
+.appName {
   font-size: 1.5rem;
   font-weight: 700;
   color: #0d9488;
@@ -42,33 +57,209 @@
 .rightSection {
   display: flex;
   align-items: center;
-  gap: 16px; /* ✅ Tambahkan gap untuk AlertBell */
+  gap: 16px;
+}
+
+/* Icon Button Styles */
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.iconButton:hover {
+  background: #f3f4f6;
+}
+
+.notificationIcon {
+  font-size: 1.2rem;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* User Menu Styles */
+.userMenu {
+  position: relative;
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.userButton:hover {
+  background: #f3f4f6;
+}
+
+.userAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0d9488, #10b981);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .userInfo {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .userName {
-  font-weight: 500;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.userRole {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.dropdownArrow {
+  transition: transform 0.2s;
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.dropdownArrow.rotated {
+  transform: rotate(180deg);
+}
+
+/* User Dropdown Styles */
+.userDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  min-width: 240px;
+  z-index: 101;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownHeader {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.dropdownUserName {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 2px;
+}
+
+.dropdownUserRole {
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 8px 0;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-align: left;
+  font-size: 0.9rem;
   color: #374151;
 }
 
-.logoutButton {
-  padding: 8px 16px;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
+.dropdownItem:hover {
+  background: #f8fafc;
 }
 
-.logoutButton:hover {
-  background: #dc2626;
+.dropdownIcon {
+  font-size: 1rem;
+  width: 16px;
+  text-align: center;
+}
+
+.dropdownText {
+  flex: 1;
+}
+
+.logoutItem {
+  color: #dc2626;
+}
+
+.logoutItem:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* Dropdown Overlay */
+.dropdownOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 99;
 }
 
 /* Hide menu button on desktop */
@@ -80,19 +271,50 @@
 
 /* Mobile Styles */
 @media (max-width: 768px) {
-  .topbar {
+  .topBar {
     padding: 12px 16px;
+    height: 70px;
   }
   
   .menuButton {
-    display: block;
+    display: flex;
   }
   
-  .appTitle {
+  .appName {
     font-size: 1.3rem;
   }
   
-  .userName {
+  .userInfo {
     display: none;
+  }
+  
+  .userButton {
+    padding: 6px;
+  }
+  
+  .userDropdown {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    margin-top: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    min-width: auto;
+  }
+  
+  .dropdownOverlay {
+    display: block;
+  }
+}
+
+/* Tablet Styles */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .userName {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

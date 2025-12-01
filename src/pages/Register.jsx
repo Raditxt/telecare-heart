@@ -23,26 +23,17 @@ export default function Register() {
   });
   const navigate = useNavigate();
 
-  // Handle window resize with debounce
+  // Handle window resize
   useEffect(() => {
-    let timeoutId = null;
-    
     const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setWindowSize({
-          width: window.innerWidth,
-          height: window.innerHeight
-        });
-      }, 150);
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
     };
 
     window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timeoutId);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleChange = useCallback((e) => {
@@ -52,7 +43,6 @@ export default function Register() {
       [name]: value
     }));
     
-    // Clear error when user starts typing
     if (error) setError("");
   }, [error]);
 
@@ -60,8 +50,8 @@ export default function Register() {
     setFormData(prev => ({
       ...prev,
       role,
-      specialization: "", // Reset specialization when role changes
-      relationship: "" // Reset relationship when role changes
+      specialization: "",
+      relationship: ""
     }));
     setError("");
   };
@@ -156,27 +146,28 @@ export default function Register() {
           <div className={styles.formContainer}>
 
             <div className={styles.header}>
-              <h1 className={`${styles.title} ${isDesktop ? styles.titleDesktop : styles.titleMobile}`}>
-                Daftar Akun TeleCare-Heart
-              </h1>
+              <div className={styles.logo}>
+                <div className={styles.heartIcon}>❤️</div>
+                <h1 className={styles.logoText}>TeleCare-Heart</h1>
+              </div>
+              <h2 className={`${styles.title} ${isDesktop ? styles.titleDesktop : styles.titleMobile}`}>
+                Daftar Akun Baru
+              </h2>
               <p className={`${styles.subtitle} ${isDesktop ? styles.subtitleDesktop : styles.subtitleMobile}`}>
-                Pilih peran Anda dan buat akun untuk mulai memonitor kesehatan jantung
+                Bergabung dengan sistem monitoring jantung terintegrasi
               </p>
             </div>
 
             {error && (
-              <div 
-                className={styles.errorMessage}
-                role="alert"
-                aria-live="polite"
-              >
+              <div className={styles.errorMessage} role="alert">
+                <span className={styles.errorIcon}>⚠️</span>
                 {error}
               </div>
             )}
 
             {/* Role Selection */}
             <div className={styles.roleSelection}>
-              <h3 className={styles.roleTitle}>Saya adalah:</h3>
+              <h3 className={styles.roleTitle}>Pilih Peran Anda</h3>
               <div className={styles.roleButtons}>
                 <button
                   type="button"
@@ -184,10 +175,12 @@ export default function Register() {
                   onClick={() => handleRoleSelect('doctor')}
                 >
                   <span className={styles.roleIcon}>👨‍⚕️</span>
-                  <span className={styles.roleText}>Dokter</span>
-                  <span className={styles.roleDescription}>
-                    Memantau pasien dan menganalisis data kesehatan
-                  </span>
+                  <div className={styles.roleContent}>
+                    <span className={styles.roleText}>Dokter</span>
+                    <span className={styles.roleDescription}>
+                      Akses penuh monitoring pasien dan analisis data
+                    </span>
+                  </div>
                 </button>
                 
                 <button
@@ -196,79 +189,89 @@ export default function Register() {
                   onClick={() => handleRoleSelect('family')}
                 >
                   <span className={styles.roleIcon}>👪</span>
-                  <span className={styles.roleText}>Keluarga Pasien</span>
-                  <span className={styles.roleDescription}>
-                    Memantau kesehatan anggota keluarga
-                  </span>
+                  <div className={styles.roleContent}>
+                    <span className={styles.roleText}>Keluarga Pasien</span>
+                    <span className={styles.roleDescription}>
+                      Pantau kesehatan anggota keluarga
+                    </span>
+                  </div>
                 </button>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} noValidate>
+            <form onSubmit={handleSubmit} className={styles.form} noValidate>
               {/* Basic Information */}
               <div className={styles.formSection}>
-                <h3 className={styles.sectionTitle}>Informasi Dasar</h3>
+                <h3 className={styles.sectionTitle}>
+                  <span className={styles.sectionIcon}>👤</span>
+                  Informasi Pribadi
+                </h3>
                 
                 <div className={styles.formGroup}>
                   <label htmlFor="name" className={styles.label}>
-                    Nama Lengkap *
+                    Nama Lengkap
                   </label>
                   <input
                     id="name"
                     name="name"
                     type="text"
-                    placeholder="Masukkan nama lengkap"
+                    placeholder="Masukkan nama lengkap Anda"
                     value={formData.name}
                     onChange={handleChange}
                     disabled={isLoading}
-                    className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
+                    className={styles.input}
                     required
                   />
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label htmlFor="email" className={styles.label}>
-                    Email *
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="contoh@domain.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
-                    required
-                  />
-                </div>
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="email" className={styles.label}>
+                      Email
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="email@contoh.com"
+                      value={formData.email}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={styles.input}
+                      required
+                    />
+                  </div>
 
-                <div className={styles.formGroup}>
-                  <label htmlFor="phone" className={styles.label}>
-                    Nomor Telepon *
-                  </label>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="+62 812-3456-7890"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
-                    required
-                  />
+                  <div className={styles.formGroup}>
+                    <label htmlFor="phone" className={styles.label}>
+                      No. Telepon
+                    </label>
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="08xxxxxxxxxx"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={styles.input}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Role Specific Information */}
               {formData.role === 'doctor' && (
                 <div className={styles.formSection}>
-                  <h3 className={styles.sectionTitle}>Informasi Profesional</h3>
+                  <h3 className={styles.sectionTitle}>
+                    <span className={styles.sectionIcon}>🏥</span>
+                    Informasi Profesional
+                  </h3>
                   
                   <div className={styles.formGroup}>
                     <label htmlFor="specialization" className={styles.label}>
-                      Spesialisasi *
+                      Spesialisasi
                     </label>
                     <select
                       id="specialization"
@@ -276,22 +279,23 @@ export default function Register() {
                       value={formData.specialization}
                       onChange={handleChange}
                       disabled={isLoading}
-                      className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
+                      className={styles.input}
                       required
                     >
                       <option value="">Pilih spesialisasi</option>
-                      <option value="Cardiologist">Kardiologis</option>
-                      <option value="General Practitioner">Dokter Umum</option>
-                      <option value="Internist">Penyakit Dalam</option>
-                      <option value="Emergency Medicine">Dokter Emergency</option>
-                      <option value="Other">Lainnya</option>
+                      <option value="Kardiolog">Kardiolog</option>
+                      <option value="Dokter Umum">Dokter Umum</option>
+                      <option value="Spesialis Penyakit Dalam">Spesialis Penyakit Dalam</option>
+                      <option value="Dokter Emergency">Dokter Emergency</option>
+                      <option value="Spesialis Jantung">Spesialis Jantung</option>
+                      <option value="Lainnya">Lainnya</option>
                     </select>
                   </div>
 
-                  {formData.specialization === 'Other' && (
+                  {formData.specialization === 'Lainnya' && (
                     <div className={styles.formGroup}>
                       <label htmlFor="customSpecialization" className={styles.label}>
-                        Spesialisasi Lainnya *
+                        Spesialisasi Lainnya
                       </label>
                       <input
                         id="customSpecialization"
@@ -301,7 +305,7 @@ export default function Register() {
                         value={formData.specialization}
                         onChange={handleChange}
                         disabled={isLoading}
-                        className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
+                        className={styles.input}
                         required
                       />
                     </div>
@@ -311,11 +315,14 @@ export default function Register() {
 
               {formData.role === 'family' && (
                 <div className={styles.formSection}>
-                  <h3 className={styles.sectionTitle}>Informasi Keluarga</h3>
+                  <h3 className={styles.sectionTitle}>
+                    <span className={styles.sectionIcon}>👨‍👩‍👧‍👦</span>
+                    Informasi Keluarga
+                  </h3>
                   
                   <div className={styles.formGroup}>
                     <label htmlFor="relationship" className={styles.label}>
-                      Hubungan dengan Pasien *
+                      Hubungan dengan Pasien
                     </label>
                     <select
                       id="relationship"
@@ -323,33 +330,33 @@ export default function Register() {
                       value={formData.relationship}
                       onChange={handleChange}
                       disabled={isLoading}
-                      className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
+                      className={styles.input}
                       required
                     >
                       <option value="">Pilih hubungan</option>
-                      <option value="spouse">Suami/Istri</option>
-                      <option value="child">Anak</option>
-                      <option value="parent">Orang Tua</option>
-                      <option value="sibling">Saudara Kandung</option>
-                      <option value="grandchild">Cucu</option>
-                      <option value="other">Lainnya</option>
+                      <option value="Suami/Istri">Suami/Istri</option>
+                      <option value="Anak">Anak</option>
+                      <option value="Orang Tua">Orang Tua</option>
+                      <option value="Saudara Kandung">Saudara Kandung</option>
+                      <option value="Cucu">Cucu</option>
+                      <option value="Lainnya">Lainnya</option>
                     </select>
                   </div>
 
-                  {formData.relationship === 'other' && (
+                  {formData.relationship === 'Lainnya' && (
                     <div className={styles.formGroup}>
                       <label htmlFor="customRelationship" className={styles.label}>
-                        Hubungan Lainnya *
+                        Hubungan Lainnya
                       </label>
                       <input
                         id="customRelationship"
                         name="relationship"
                         type="text"
-                        placeholder="Masukkan hubungan Anda dengan pasien"
+                        placeholder="Masukkan hubungan Anda"
                         value={formData.relationship}
                         onChange={handleChange}
                         disabled={isLoading}
-                        className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
+                        className={styles.input}
                         required
                       />
                     </div>
@@ -359,83 +366,81 @@ export default function Register() {
 
               {/* Password Section */}
               <div className={styles.formSection}>
-                <h3 className={styles.sectionTitle}>Keamanan Akun</h3>
+                <h3 className={styles.sectionTitle}>
+                  <span className={styles.sectionIcon}>🔒</span>
+                  Keamanan Akun
+                </h3>
                 
-                <div className={styles.formGroup}>
-                  <label htmlFor="password" className={styles.label}>
-                    Password *
-                  </label>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="Minimal 6 karakter"
-                    value={formData.password}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
-                    required
-                    minLength="6"
-                  />
-                </div>
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="password" className={styles.label}>
+                      Password
+                    </label>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      placeholder="Minimal 6 karakter"
+                      value={formData.password}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={styles.input}
+                      required
+                      minLength="6"
+                    />
+                  </div>
 
-                <div className={styles.formGroup}>
-                  <label htmlFor="confirmPassword" className={styles.label}>
-                    Konfirmasi Password *
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    placeholder="Ulangi password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={`${styles.input} ${isLoading ? styles.inputDisabled : ''}`}
-                    required
-                    minLength="6"
-                  />
+                  <div className={styles.formGroup}>
+                    <label htmlFor="confirmPassword" className={styles.label}>
+                      Konfirmasi Password
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      placeholder="Ulangi password"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={styles.input}
+                      required
+                      minLength="6"
+                    />
+                  </div>
                 </div>
               </div>
 
               <button 
                 type="submit" 
                 disabled={isLoading || !formData.role} 
-                className={`${styles.button} ${isLoading ? styles.buttonDisabled : ''} ${!formData.role ? styles.buttonInactive : ''}`}
-                aria-label={isLoading ? "Memproses pendaftaran" : "Daftar akun baru"}
+                className={styles.submitButton}
               >
                 {isLoading ? (
                   <>
                     <span className={styles.spinner}></span>
-                    Memproses Pendaftaran...
+                    Membuat Akun...
                   </>
                 ) : (
-                  `Daftar sebagai ${formData.role === 'doctor' ? 'Dokter' : formData.role === 'family' ? 'Keluarga Pasien' : 'Pengguna'}`
+                  `Daftar sebagai ${formData.role === 'doctor' ? 'Dokter' : 'Keluarga Pasien'}`
                 )}
               </button>
             </form>
 
-            <p className={styles.loginLink}>
-              Sudah punya akun?{" "}
-              <Link to="/login" className={styles.link}>
-                Masuk di sini
-              </Link>
-            </p>
-
-            <div className={styles.info}>
-              <div className={styles.infoTitle}>Informasi Penting</div>
-              <p className={styles.infoText}>
-                • Data Anda dilindungi dan dijaga kerahasiaannya
+            <div className={styles.footer}>
+              <p className={styles.loginPrompt}>
+                Sudah memiliki akun?{" "}
+                <Link to="/login" className={styles.loginLink}>
+                  Masuk di sini
+                </Link>
               </p>
-              <p className={styles.infoText}>
-                • Pastikan informasi yang Anda berikan akurat
-              </p>
-              <p className={styles.infoText}>
-                • {formData.role === 'doctor' 
-                    ? 'Dokter akan diverifikasi oleh admin sebelum dapat mengakses fitur lengkap' 
-                    : 'Keluarga pasien dapat memantau setelah dihubungkan dengan pasien oleh dokter'
-                  }
-              </p>
+              
+              <div className={styles.securityInfo}>
+                <div className={styles.securityIcon}>🛡️</div>
+                <div className={styles.securityText}>
+                  <strong>Data Anda Aman</strong>
+                  <span>Informasi pasien dilindungi dengan enkripsi</span>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -444,96 +449,75 @@ export default function Register() {
         {!isMobile && (
           <div className={`${styles.sidebar} ${isDesktop ? styles.sidebarDesktop : styles.sidebarTablet}`}>
             <div className={styles.sidebarContent}>
-              <div className={styles.heartIcon}>
-                <div className={styles.iconContainer}>
-                  <svg 
-                    className={styles.icon} 
-                    fill="currentColor" 
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                  </svg>
+              <div className={styles.sidebarHeader}>
+                <div className={styles.sidebarHeart}>💙</div>
+                <h3>Sistem Monitoring Jantung</h3>
+              </div>
+
+              <div className={styles.benefits}>
+                <h4>Keuntungan Bergabung</h4>
+                <div className={styles.benefitList}>
+                  <div className={styles.benefitItem}>
+                    <span className={styles.benefitIcon}>📊</span>
+                    <div className={styles.benefitText}>
+                      <strong>Data Real-time</strong>
+                      <span>Pantau kondisi jantung 24/7</span>
+                    </div>
+                  </div>
+                  <div className={styles.benefitItem}>
+                    <span className={styles.benefitIcon}>🚨</span>
+                    <div className={styles.benefitText}>
+                      <strong>Peringatan Dini</strong>
+                      <span>Notifikasi kondisi darurat</span>
+                    </div>
+                  </div>
+                  <div className={styles.benefitItem}>
+                    <span className={styles.benefitIcon}>👨‍⚕️</span>
+                    <div className={styles.benefitText}>
+                      <strong>Dukungan Medis</strong>
+                      <span>Tim dokter profesional</span>
+                    </div>
+                  </div>
+                  <div className={styles.benefitItem}>
+                    <span className={styles.benefitIcon}>📱</span>
+                    <div className={styles.benefitText}>
+                      <strong>Akses Mudah</strong>
+                      <span>Dari perangkat mana saja</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <h2 className={`${styles.sidebarTitle} ${isDesktop ? styles.sidebarTitleDesktop : styles.sidebarTitleTablet}`}>
-                Bergabung dengan TeleCare-Heart
-              </h2>
-              
-              {formData.role === 'doctor' ? (
-                <div className={styles.roleSpecificInfo}>
-                  <p className={`${styles.sidebarText} ${isDesktop ? styles.sidebarTextDesktop : styles.sidebarTextTablet}`}>
-                    Sebagai <strong>Dokter</strong>, Anda dapat:
-                  </p>
-                  <div className={styles.features}>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>👨‍⚕️</span>
-                      <span>Memantau pasien secara real-time</span>
-                    </div>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>📊</span>
-                      <span>Menganalisis data ECG dan vital signs</span>
-                    </div>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>💊</span>
-                      <span>Memberikan rekomendasi pengobatan</span>
-                    </div>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>🔔</span>
-                      <span>Menerima alert kondisi kritis pasien</span>
-                    </div>
+              {formData.role && (
+                <div className={styles.roleBenefits}>
+                  <div className={styles.roleHeader}>
+                    {formData.role === 'doctor' ? '👨‍⚕️' : '👪'}
+                    <h5>Sebagai {formData.role === 'doctor' ? 'Dokter' : 'Keluarga'}</h5>
                   </div>
-                </div>
-              ) : formData.role === 'family' ? (
-                <div className={styles.roleSpecificInfo}>
-                  <p className={`${styles.sidebarText} ${isDesktop ? styles.sidebarTextDesktop : styles.sidebarTextTablet}`}>
-                    Sebagai <strong>Keluarga Pasien</strong>, Anda dapat:
-                  </p>
-                  <div className={styles.features}>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>👪</span>
-                      <span>Memantau kesehatan anggota keluarga</span>
-                    </div>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>❤️</span>
-                      <span>Melihat data vital signs real-time</span>
-                    </div>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>📱</span>
-                      <span>Menerima notifikasi kondisi darurat</span>
-                    </div>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>💬</span>
-                      <span>Berkomunikasi dengan dokter</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.roleSpecificInfo}>
-                  <p className={`${styles.sidebarText} ${isDesktop ? styles.sidebarTextDesktop : styles.sidebarTextTablet}`}>
-                    Pilih peran Anda untuk melihat fitur yang tersedia
-                  </p>
-                  <div className={styles.features}>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>🔒</span>
-                      <span>Data pasien terlindungi dan aman</span>
-                    </div>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>📈</span>
-                      <span>Monitoring kesehatan 24/7</span>
-                    </div>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>🚨</span>
-                      <span>Sistem peringatan dini</span>
-                    </div>
-                    <div className={styles.feature}>
-                      <span className={styles.featureIcon}>🏥</span>
-                      <span>Integrasi dengan profesional kesehatan</span>
-                    </div>
-                  </div>
+                  <ul className={styles.roleFeatures}>
+                    {formData.role === 'doctor' ? (
+                      <>
+                        <li>Pantau multiple pasien</li>
+                        <li>Analisis data ECG mendalam</li>
+                        <li>Berikan rekomendasi medis</li>
+                        <li>Akses riwayat kesehatan</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>Pantau 1 pasien terkait</li>
+                        <li>Notifikasi kondisi penting</li>
+                        <li>Komunikasi dengan dokter</li>
+                        <li>Lihat data vital sederhana</li>
+                      </>
+                    )}
+                  </ul>
                 </div>
               )}
+
+              <div className={styles.sidebarFooter}>
+                <p>© 2024 TeleCare-Heart</p>
+                <span>Sistem Monitoring Jantung Terintegrasi</span>
+              </div>
             </div>
           </div>
         )}

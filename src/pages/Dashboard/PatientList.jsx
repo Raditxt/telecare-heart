@@ -1,11 +1,11 @@
 // src/pages/Dashboard/PatientList.jsx
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../../hooks/useAuth"; // ✅ Update path
+import { useAuth } from "../../hooks/useAuth"; // ✅ Update path ke context
 import { patientService } from "../../services/patientService";
 import styles from "./PatientList.module.css";
 
 export default function PatientList() {
-  const { user } = useAuth();
+  const { user, isDoctor, isFamily } = useAuth();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,11 +17,11 @@ export default function PatientList() {
     try {
       let patientData;
       
-      if (user.role === 'doctor') {
-        // Doctors see all their assigned patients
-        patientData = await patientService.getDoctorPatients(user.userId);
-      } else if (user.role === 'family') {
-        // Family only see their related patients
+      if (isDoctor()) {
+        // 🔥 UPDATE: Doctors see ALL patients, not just assigned ones
+        patientData = await patientService.getAllPatients();
+      } else if (isFamily()) {
+        // Family only see patients they're assigned to
         patientData = await patientService.getFamilyPatients(user.userId);
       }
       
@@ -41,11 +41,11 @@ export default function PatientList() {
     <div className={styles.patientList}>
       <div className={styles.header}>
         <h1>
-          {user.role === 'doctor' ? 'My Patients' : 'Family Members'}
+          {isDoctor() ? 'All Patients' : 'My Family Members'}
         </h1>
         <p>
-          {user.role === 'doctor' 
-            ? 'Manage and monitor your assigned patients' 
+          {isDoctor() 
+            ? 'Manage and monitor all patients in the system' 
             : 'Monitor your family members\' health status'
           }
         </p>
@@ -58,8 +58,8 @@ export default function PatientList() {
               <h3>{patient.name}</h3>
               <p>Room: {patient.room}</p>
               <p>Condition: {patient.condition}</p>
-              {user.role === 'family' && (
-                <p>Relationship: {patient.relationship}</p>
+              {isFamily() && patient.relationship && (
+                <p className={styles.relationship}>Relationship: {patient.relationship}</p>
               )}
             </div>
             <div className={styles.patientActions}>
@@ -76,12 +76,14 @@ export default function PatientList() {
 
       {patients.length === 0 && (
         <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>👥</div>
+          <div className={styles.emptyIcon}>
+            {isDoctor() ? '👥' : '👪'}
+          </div>
           <h3>No patients found</h3>
           <p>
-            {user.role === 'doctor' 
-              ? 'You haven\'t been assigned any patients yet.' 
-              : 'No family members are currently being monitored.'
+            {isDoctor() 
+              ? 'No patients in the system yet.' 
+              : 'You haven\'t been assigned to any family members yet. Ask your doctor to grant you access.'
             }
           </p>
         </div>

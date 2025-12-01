@@ -15,6 +15,7 @@ export default function RoleBasedRoute({
     <RequireAuth 
       requiredRole={allowedRoles.length > 0 ? allowedRoles : null}
       patientId={requirePatientAccess ? id : null}
+      requirePatientAccess={requirePatientAccess}
       fallbackPath={fallbackPath}
     >
       {children}

@@ -7,6 +7,8 @@ import mysqlRoutes from './routes/mysql-routes.js';
 import authRoutes from './routes/auth-routes.js';
 import { db } from './services/firebase-admin.js';
 import mysqlService from './services/mysql-service.js';
+import familyRoutes from './routes/family-routes.js'; // ✅ Sudah ada
+import patientRoutes from './routes/patient-routes.js'; // ✅ Sudah ada
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -17,7 +19,9 @@ app.use(express.json());
 
 // Routes
 app.use('/api/mysql', mysqlRoutes);
-app.use('/api/auth', authRoutes); // Tambahkan auth routes
+app.use('/api/auth', authRoutes);
+app.use('/api/family', familyRoutes); // ✅ Ini sudah benar
+app.use('/api/mysql', patientRoutes); // ✅ Patient routes dengan path yang sama
 
 // Health check
 app.get('/health', async (req, res) => {
@@ -53,5 +57,7 @@ app.listen(PORT, () => {
   console.log(`🎉 Hybrid Backend Server running on port ${PORT}`);
   console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
   console.log(`📊 MySQL API: http://localhost:${PORT}/api/mysql`);
+  console.log(`👨‍👩‍👧‍👦 Family API: http://localhost:${PORT}/api/family`);
+  console.log(`👥 Patient API: http://localhost:${PORT}/api/mysql/patients`);
   console.log(`❤️  Health check: http://localhost:${PORT}/health`);
 });

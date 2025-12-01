@@ -147,11 +147,14 @@ router.post('/login', async (req, res) => {
       );
       assignedPatients = patientRows.map(row => row.patient_id);
     } else if (user.role === 'family') {
-      const [patientRows] = await connection.execute(
-        'SELECT patient_id FROM family_patients WHERE family_id = ?',
+      // 🔥 UPDATE: Query untuk family dengan is_active check
+      const [familyPatients] = await connection.execute(
+        `SELECT DISTINCT fp.patient_id 
+         FROM family_patients fp 
+         WHERE fp.family_id = ? AND fp.is_active = TRUE`,
         [user.user_id]
       );
-      assignedPatients = patientRows.map(row => row.patient_id);
+      assignedPatients = familyPatients.map(row => row.patient_id);
     }
 
     connection.release();
@@ -168,7 +171,11 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    console.log('✅ Login successful:', user.user_id);
+    console.log('✅ Login successful:', {
+      userId: user.user_id,
+      role: user.role,
+      assignedPatientsCount: assignedPatients.length
+    });
 
     res.json({
       user: {
@@ -224,11 +231,14 @@ router.get('/verify', async (req, res) => {
       );
       assignedPatients = patientRows.map(row => row.patient_id);
     } else if (user.role === 'family') {
-      const [patientRows] = await connection.execute(
-        'SELECT patient_id FROM family_patients WHERE family_id = ?',
+      // 🔥 UPDATE: Query untuk family dengan is_active check (sama seperti login)
+      const [familyPatients] = await connection.execute(
+        `SELECT DISTINCT fp.patient_id 
+         FROM family_patients fp 
+         WHERE fp.family_id = ? AND fp.is_active = TRUE`,
         [user.user_id]
       );
-      assignedPatients = patientRows.map(row => row.patient_id);
+      assignedPatients = familyPatients.map(row => row.patient_id);
     }
 
     connection.release();

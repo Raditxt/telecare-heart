@@ -1,0 +1,218 @@
+/* Layout.module.css */
+
+.dashboardLayout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  position: relative;
+}
+
+/* Main Content Styles */
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  margin-left: 280px; /* Default for desktop with sidebar open */
+  width: calc(100% - 280px);
+  min-height: 100vh;
+}
+
+/* When sidebar is CLOSED on desktop */
+.mainContent.sidebarClosed:not(.mobile) {
+  margin-left: 70px;
+  width: calc(100% - 70px);
+}
+
+/* When sidebar is CLOSED on mobile */
+.mainContent.mobile.sidebarClosed {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+/* Content Area */
+.content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 80px); /* Adjust based on your topbar height */
+}
+
+/* Loading Styles */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+  background: #f8fafc;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-left: 4px solid #0d9488; /* Using your teal color */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loadingContainer p {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+/* Page Title Styles (for dynamic titles) */
+.pageTitle h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.pageTitle small {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* Top Bar adjustments for Layout */
+.topBar {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  position: sticky;
+  top: 0;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  .mainContent.sidebarOpen {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  .content {
+    padding: 16px;
+    min-height: calc(100vh - 70px); /* Adjust for mobile topbar height */
+  }
+  
+  /* Hide desktop-specific elements in mobile view */
+  .desktopOnly {
+    display: none;
+  }
+}
+
+/* Desktop Styles */
+@media (min-width: 769px) {
+  .mobileOnly {
+    display: none;
+  }
+  
+  .pageTitle {
+    margin-left: 0;
+  }
+}
+
+/* Tablet Styles */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .content {
+    padding: 20px;
+  }
+  
+  .mainContent {
+    margin-left: 70px; /* Keep sidebar collapsed on tablet by default */
+    width: calc(100% - 70px);
+  }
+  
+  .mainContent.sidebarOpen {
+    margin-left: 280px;
+    width: calc(100% - 280px);
+  }
+}
+
+/* Animation for page transitions */
+.content > * {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar Styling */
+.content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Print Styles */
+@media print {
+  .mainContent {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  .content {
+    padding: 0;
+    background: white;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .content {
+    border: 1px solid #000;
+  }
+  
+  .spinner {
+    border-color: #000;
+    border-left-color: #00f;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .mainContent,
+  .content > * {
+    transition: none;
+    animation: none;
+  }
+  
+  .spinner {
+    animation-duration: 2s;
+  }
+}

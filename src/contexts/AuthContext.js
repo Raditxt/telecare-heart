@@ -14,5 +14,8 @@ export const AuthContext = createContext({
   isFamily: () => false,
   isAdmin: () => false,
   getDisplayName: () => '',
-  getRoleDisplay: () => ''
+  getRoleDisplay: () => '',
+  canAccessPatient: () => false,
+  canManageData: () => false,
+  isReadOnly: () => false
 });

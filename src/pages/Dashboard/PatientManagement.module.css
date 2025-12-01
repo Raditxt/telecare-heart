@@ -48,6 +48,26 @@
   box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
 }
 
+.assignButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Content Layout */
+.content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .content {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* Patient Section */
 .patientSection {
   background: white;
@@ -80,6 +100,7 @@
   padding: 20px;
   transition: all 0.3s ease;
   position: relative;
+  cursor: pointer;
 }
 
 .patientCard:hover {
@@ -88,42 +109,66 @@
   border-color: #0d9488;
 }
 
-.patientCard h3 {
+.patientCard.selected {
+  border-color: #0d9488;
+  background: #f0fdfa;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+/* Patient Header */
+.patientHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.patientHeader h3 {
   font-size: 1.2rem;
   color: #1f2937;
-  margin-bottom: 12px;
+  margin: 0;
   font-weight: 600;
+  flex: 1;
 }
 
-.patientCard p {
+.roomBadge {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+.condition {
   color: #6b7280;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-}
-
-.patientCard p:last-child {
-  margin-bottom: 0;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+  line-height: 1.4;
 }
 
 /* Patient Actions */
 .patientActions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-top: 16px;
   flex-wrap: wrap;
 }
 
 .viewButton {
-  padding: 8px 16px;
+  padding: 8px 12px;
   background: #0d9488;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   transition: all 0.2s ease;
   flex: 1;
+  min-width: 80px;
 }
 
 .viewButton:hover {
@@ -132,16 +177,17 @@
 }
 
 .unassignButton {
-  padding: 8px 16px;
+  padding: 8px 12px;
   background: #dc2626;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   transition: all 0.2s ease;
   flex: 1;
+  min-width: 80px;
 }
 
 .unassignButton:hover {
@@ -149,8 +195,133 @@
   transform: translateY(-1px);
 }
 
-/* Modal */
-.modal {
+.manageButton {
+  padding: 8px 12px;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  flex: 1;
+  min-width: 80px;
+}
+
+.manageButton:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+}
+
+/* Family Section */
+.familySection {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  align-self: start;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f3f4f6;
+  padding-bottom: 12px;
+}
+
+.sectionHeader h3 {
+  font-size: 1.3rem;
+  color: #1f2937;
+  font-weight: 600;
+  margin: 0;
+}
+
+.addButton {
+  padding: 8px 16px;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.addButton:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+}
+
+/* Family List */
+.familyList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.familyCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.familyCard:hover {
+  background: #f1f5f9;
+  border-color: #d1d5db;
+}
+
+.familyInfo {
+  flex: 1;
+}
+
+.familyInfo strong {
+  display: block;
+  color: #1f2937;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.familyInfo span {
+  display: block;
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin-bottom: 2px;
+}
+
+.familyInfo small {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.removeButton {
+  padding: 6px 12px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.removeButton:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* Modal Overlay */
+.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -164,10 +335,9 @@
   padding: 20px;
 }
 
-.modalContent {
+.modal {
   background: white;
   border-radius: 12px;
-  padding: 24px;
   max-width: 500px;
   width: 100%;
   max-height: 80vh;
@@ -175,12 +345,124 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
-.modalContent h3 {
+.modalContent {
+  padding: 24px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+}
+
+.modalHeader h3 {
   font-size: 1.5rem;
   color: #1f2937;
-  margin-bottom: 20px;
   font-weight: 600;
-  text-align: center;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Modal Body */
+.modalBody {
+  margin-bottom: 20px;
+}
+
+/* Form Styles */
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.formGroup label {
+  display: block;
+  color: #374151;
+  font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+
+.formGroup input,
+.formGroup select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.formGroup small {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Modal Actions */
+.modalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.saveButton {
+  padding: 10px 20px;
+  background: #0d9488;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.saveButton:hover {
+  background: #0f766e;
+  transform: translateY(-1px);
+}
+
+.cancelButton {
+  padding: 10px 20px;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
 }
 
 /* Modal Patient List */
@@ -209,42 +491,96 @@
   border-color: #0d9488;
 }
 
-.modalPatient span {
-  font-weight: 500;
+.patientInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.patientInfo strong {
   color: #374151;
+  font-weight: 600;
 }
 
-.modalPatient button {
-  padding: 6px 12px;
+.patientInfo span {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.assignBtn {
+  padding: 8px 16px;
   background: #0d9488;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 0.8rem;
-  transition: all 0.2s ease;
-}
-
-.modalPatient button:hover {
-  background: #0f766e;
-  transform: translateY(-1px);
-}
-
-.modalContent > button:last-child {
-  width: 100%;
-  padding: 12px;
-  background: #6b7280;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
+  font-size: 0.85rem;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.modalContent > button:last-child:hover {
-  background: #4b5563;
+.assignBtn:hover {
+  background: #0f766e;
+  transform: translateY(-1px);
+}
+
+.assignBtn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* No Patients State */
+.noPatients {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.noPatientsIcon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.noPatients p {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.noPatients span {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* Error Banner */
+.errorBanner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.errorBanner button {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.errorBanner button:hover {
+  background: #fecaca;
 }
 
 /* Unauthorized Access */
@@ -271,6 +607,17 @@
 
 /* Loading State */
 .loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  font-size: 1.1rem;
+  gap: 16px;
+}
+
+.loadingContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -310,6 +657,12 @@
   margin-bottom: 8px;
 }
 
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .patientManagement {
@@ -324,7 +677,8 @@
     font-size: 1.75rem;
   }
   
-  .patientSection {
+  .patientSection,
+  .familySection {
     padding: 20px;
   }
   
@@ -333,12 +687,40 @@
     gap: 16px;
   }
   
-  .modal {
+  .modalOverlay {
     padding: 10px;
   }
   
   .modalContent {
     padding: 20px;
+  }
+  
+  .sectionHeader {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .patientActions {
+    flex-direction: column;
+  }
+  
+  .viewButton,
+  .unassignButton,
+  .manageButton {
+    flex: none;
+    width: 100%;
+  }
+  
+  .patientHeader {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  .roomBadge {
+    margin-left: 0;
+    align-self: flex-start;
   }
 }
 
@@ -360,15 +742,6 @@
     padding: 16px;
   }
   
-  .patientActions {
-    flex-direction: column;
-  }
-  
-  .viewButton,
-  .unassignButton {
-    flex: none;
-  }
-  
   .modalPatient {
     flex-direction: column;
     gap: 10px;
@@ -377,5 +750,32 @@
   
   .modalPatient button {
     align-self: flex-end;
+  }
+  
+  .familyCard {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .removeButton {
+    align-self: flex-end;
+  }
+  
+  .modalActions {
+    flex-direction: column;
+  }
+  
+  .saveButton,
+  .cancelButton {
+    width: 100%;
+  }
+  
+  .noPatientsIcon {
+    font-size: 2.5rem;
+  }
+  
+  .emptyIcon {
+    font-size: 2.5rem;
   }
 }
