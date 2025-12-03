@@ -9,6 +9,7 @@ import { db } from './services/firebase-admin.js';
 import mysqlService from './services/mysql-service.js';
 import familyRoutes from './routes/family-routes.js'; // ✅ Sudah ada
 import patientRoutes from './routes/patient-routes.js'; // ✅ Sudah ada
+import vitalsroutes from './routes/vital-routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,7 +22,8 @@ app.use(express.json());
 app.use('/api/mysql', mysqlRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/family', familyRoutes); // ✅ Ini sudah benar
-app.use('/api/mysql', patientRoutes); // ✅ Patient routes dengan path yang sama
+app.use('/api/patients', patientRoutes); // ✅ Patient routes dengan path yang sama
+app.use('/api/vitals', vitalsroutes); // Vitals service routes
 
 // Health check
 app.get('/health', async (req, res) => {

@@ -32,7 +32,6 @@ export default function Sidebar({ isOpen, onClose, onToggle }) {
     // Common items for all users
     const commonItems = [
       { path: '/profile', icon: '👤', label: 'Profile', roles: ['doctor', 'family'] },
-      { path: '/system-test', icon: '🔧', label: 'System Test', roles: ['doctor', 'family'] },
     ];
 
     // Doctor menu items
@@ -41,7 +40,6 @@ export default function Sidebar({ isOpen, onClose, onToggle }) {
       { path: '/patients', icon: '👥', label: 'All Patients', roles: ['doctor'] },
       { path: '/manage-patients', icon: '📋', label: 'Manage Patients', roles: ['doctor'] },
       { path: '/history', icon: '📈', label: 'History & Analytics', roles: ['doctor'] },
-      { path: '/device', icon: '🖥️', label: 'Device Monitoring', roles: ['doctor'] },
     ];
 
     // Family menu items

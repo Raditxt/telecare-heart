@@ -12,8 +12,7 @@ export default function Register() {
     confirmPassword: "",
     role: "", // 'doctor' or 'family'
     phone: "",
-    specialization: "", // for doctor
-    relationship: "", // for family
+    // Hapus specialization dan relationship karena tidak dikirim ke backend
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -50,8 +49,7 @@ export default function Register() {
     setFormData(prev => ({
       ...prev,
       role,
-      specialization: "",
-      relationship: ""
+      // Hapus specialization dan relationship
     }));
     setError("");
   };
@@ -73,6 +71,8 @@ export default function Register() {
       return "Pilih peran Anda (Dokter atau Keluarga Pasien)";
     }
 
+    // HAPUS VALIDASI specialization dan relationship karena tidak dikirim ke backend
+    /*
     if (formData.role === 'doctor' && !formData.specialization.trim()) {
       return "Spesialisasi dokter harus diisi";
     }
@@ -80,6 +80,7 @@ export default function Register() {
     if (formData.role === 'family' && !formData.relationship.trim()) {
       return "Hubungan dengan pasien harus diisi";
     }
+    */
 
     if (formData.password.length < 6) {
       return "Password harus minimal 6 karakter";
@@ -109,14 +110,14 @@ export default function Register() {
     setError("");
 
     try {
+      // Hanya kirim data yang diperlukan oleh backend
       const result = await register({
         name: formData.name,
         email: formData.email,
         password: formData.password,
         role: formData.role,
         phone: formData.phone,
-        specialization: formData.specialization,
-        relationship: formData.relationship
+        // HAPUS specialization dan relationship karena tidak ada di tabel
       });
 
       if (result.success) {
@@ -260,109 +261,6 @@ export default function Register() {
                   </div>
                 </div>
               </div>
-
-              {/* Role Specific Information */}
-              {formData.role === 'doctor' && (
-                <div className={styles.formSection}>
-                  <h3 className={styles.sectionTitle}>
-                    <span className={styles.sectionIcon}>🏥</span>
-                    Informasi Profesional
-                  </h3>
-                  
-                  <div className={styles.formGroup}>
-                    <label htmlFor="specialization" className={styles.label}>
-                      Spesialisasi
-                    </label>
-                    <select
-                      id="specialization"
-                      name="specialization"
-                      value={formData.specialization}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={styles.input}
-                      required
-                    >
-                      <option value="">Pilih spesialisasi</option>
-                      <option value="Kardiolog">Kardiolog</option>
-                      <option value="Dokter Umum">Dokter Umum</option>
-                      <option value="Spesialis Penyakit Dalam">Spesialis Penyakit Dalam</option>
-                      <option value="Dokter Emergency">Dokter Emergency</option>
-                      <option value="Spesialis Jantung">Spesialis Jantung</option>
-                      <option value="Lainnya">Lainnya</option>
-                    </select>
-                  </div>
-
-                  {formData.specialization === 'Lainnya' && (
-                    <div className={styles.formGroup}>
-                      <label htmlFor="customSpecialization" className={styles.label}>
-                        Spesialisasi Lainnya
-                      </label>
-                      <input
-                        id="customSpecialization"
-                        name="specialization"
-                        type="text"
-                        placeholder="Masukkan spesialisasi Anda"
-                        value={formData.specialization}
-                        onChange={handleChange}
-                        disabled={isLoading}
-                        className={styles.input}
-                        required
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {formData.role === 'family' && (
-                <div className={styles.formSection}>
-                  <h3 className={styles.sectionTitle}>
-                    <span className={styles.sectionIcon}>👨‍👩‍👧‍👦</span>
-                    Informasi Keluarga
-                  </h3>
-                  
-                  <div className={styles.formGroup}>
-                    <label htmlFor="relationship" className={styles.label}>
-                      Hubungan dengan Pasien
-                    </label>
-                    <select
-                      id="relationship"
-                      name="relationship"
-                      value={formData.relationship}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      className={styles.input}
-                      required
-                    >
-                      <option value="">Pilih hubungan</option>
-                      <option value="Suami/Istri">Suami/Istri</option>
-                      <option value="Anak">Anak</option>
-                      <option value="Orang Tua">Orang Tua</option>
-                      <option value="Saudara Kandung">Saudara Kandung</option>
-                      <option value="Cucu">Cucu</option>
-                      <option value="Lainnya">Lainnya</option>
-                    </select>
-                  </div>
-
-                  {formData.relationship === 'Lainnya' && (
-                    <div className={styles.formGroup}>
-                      <label htmlFor="customRelationship" className={styles.label}>
-                        Hubungan Lainnya
-                      </label>
-                      <input
-                        id="customRelationship"
-                        name="relationship"
-                        type="text"
-                        placeholder="Masukkan hubungan Anda"
-                        value={formData.relationship}
-                        onChange={handleChange}
-                        disabled={isLoading}
-                        className={styles.input}
-                        required
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Password Section */}
               <div className={styles.formSection}>

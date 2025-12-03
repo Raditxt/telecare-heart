@@ -6,23 +6,12 @@ import mysqlService from '../services/mysql-service.js';
 
 const router = express.Router();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-for-telecare-heart-2024-change-this-in-production';
 
-// Helper function untuk handle null/undefined values
-function sanitizeData(data) {
-  const sanitized = { ...data };
-  Object.keys(sanitized).forEach(key => {
-    if (sanitized[key] === undefined) {
-      sanitized[key] = null;
-    }
-  });
-  return sanitized;
-}
-
-// Register
+// ==================== REGISTER ====================
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, role, phone, specialization, relationship } = req.body;
+    const { email, password, name, role, phone } = req.body;
 
     console.log('📝 Registration attempt:', { email, name, role });
 
@@ -31,8 +20,14 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Email, password, name, and role are required' });
     }
 
-    // Check if user already exists
+    // Validate role
+    if (!['doctor', 'family'].includes(role)) {
+      return res.status(400).json({ error: 'Role must be either "doctor" or "family"' });
+    }
+
     const connection = await mysqlService.pool.getConnection();
+    
+    // Check if user already exists
     const [existingUsers] = await connection.execute(
       'SELECT * FROM users WHERE email = ?',
       [email]
@@ -40,45 +35,27 @@ router.post('/register', async (req, res) => {
 
     if (existingUsers.length > 0) {
       connection.release();
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ error: 'User already exists with this email' });
     }
 
     // Hash password
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Generate user ID
-    const userId = generateUserId(role);
-
-    // Sanitize data - convert undefined to null
-    const sanitizedData = sanitizeData({
-      specialization: role === 'doctor' ? specialization : null,
-      relationship: role === 'family' ? relationship : null,
-      phone: phone || null
-    });
-
-    console.log('💾 Inserting user with data:', {
-      userId, email, name, role, 
-      phone: sanitizedData.phone,
-      specialization: sanitizedData.specialization,
-      relationship: sanitizedData.relationship
-    });
-
-    // Insert user - langsung await tanpa assign ke variable
-    await connection.execute(
-      `INSERT INTO users (user_id, email, password_hash, name, role, phone, specialization, relationship) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    // Insert user - sesuai dengan struktur tabel Anda
+    const [result] = await connection.execute(
+      `INSERT INTO users (email, password_hash, name, role, phone) 
+       VALUES (?, ?, ?, ?, ?)`,
       [
-        userId, 
         email, 
         passwordHash, 
         name, 
         role, 
-        sanitizedData.phone,
-        sanitizedData.specialization, 
-        sanitizedData.relationship
+        phone || null
       ]
     );
+
+    const userId = result.insertId;
 
     connection.release();
 
@@ -94,13 +71,11 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       message: 'User registered successfully',
       user: {
-        userId,
+        id: userId,
         email,
         name,
         role,
-        phone: sanitizedData.phone,
-        specialization: sanitizedData.specialization,
-        relationship: sanitizedData.relationship
+        phone: phone || null
       },
       token
     });
@@ -111,7 +86,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login
+// ==================== LOGIN ====================
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -119,14 +94,16 @@ router.post('/login', async (req, res) => {
     console.log('🔐 Login attempt:', email);
 
     const connection = await mysqlService.pool.getConnection();
+    
+    // Sesuai struktur tabel - tidak ada is_active di tabel users Anda
     const [users] = await connection.execute(
-      'SELECT * FROM users WHERE email = ? AND is_active = TRUE',
+      'SELECT * FROM users WHERE email = ?',
       [email]
     );
 
     if (users.length === 0) {
       connection.release();
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const user = users[0];
@@ -135,7 +112,7 @@ router.post('/login', async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       connection.release();
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Get assigned patients based on role
@@ -143,16 +120,15 @@ router.post('/login', async (req, res) => {
     if (user.role === 'doctor') {
       const [patientRows] = await connection.execute(
         'SELECT patient_id FROM doctor_patients WHERE doctor_id = ?',
-        [user.user_id]
+        [user.id]
       );
       assignedPatients = patientRows.map(row => row.patient_id);
     } else if (user.role === 'family') {
-      // 🔥 UPDATE: Query untuk family dengan is_active check
       const [familyPatients] = await connection.execute(
-        `SELECT DISTINCT fp.patient_id 
+        `SELECT fp.patient_id 
          FROM family_patients fp 
-         WHERE fp.family_id = ? AND fp.is_active = TRUE`,
-        [user.user_id]
+         WHERE fp.family_id = ? AND fp.status = 'active'`,
+        [user.id]
       );
       assignedPatients = familyPatients.map(row => row.patient_id);
     }
@@ -162,7 +138,7 @@ router.post('/login', async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { 
-        userId: user.user_id, 
+        userId: user.id, 
         email: user.email, 
         role: user.role, 
         name: user.name 
@@ -172,20 +148,19 @@ router.post('/login', async (req, res) => {
     );
 
     console.log('✅ Login successful:', {
-      userId: user.user_id,
+      userId: user.id,
       role: user.role,
-      assignedPatientsCount: assignedPatients.length
+      name: user.name
     });
 
     res.json({
+      message: 'Login successful',
       user: {
-        userId: user.user_id,
+        id: user.id,
         email: user.email,
         name: user.name,
         role: user.role,
         phone: user.phone,
-        specialization: user.specialization,
-        relationship: user.relationship,
         assignedPatients
       },
       token
@@ -193,11 +168,11 @@ router.post('/login', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
 });
 
-// Verify token
+// ==================== VERIFY TOKEN ====================
 router.get('/verify', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -206,12 +181,13 @@ router.get('/verify', async (req, res) => {
       return res.status(401).json({ error: 'No token provided' });
     }
 
+    // Verify token
     const decoded = jwt.verify(token, JWT_SECRET);
     
     // Get fresh user data
     const connection = await mysqlService.pool.getConnection();
     const [users] = await connection.execute(
-      'SELECT * FROM users WHERE user_id = ? AND is_active = TRUE',
+      'SELECT * FROM users WHERE id = ?',
       [decoded.userId]
     );
 
@@ -227,16 +203,15 @@ router.get('/verify', async (req, res) => {
     if (user.role === 'doctor') {
       const [patientRows] = await connection.execute(
         'SELECT patient_id FROM doctor_patients WHERE doctor_id = ?',
-        [user.user_id]
+        [user.id]
       );
       assignedPatients = patientRows.map(row => row.patient_id);
     } else if (user.role === 'family') {
-      // 🔥 UPDATE: Query untuk family dengan is_active check (sama seperti login)
       const [familyPatients] = await connection.execute(
-        `SELECT DISTINCT fp.patient_id 
+        `SELECT fp.patient_id 
          FROM family_patients fp 
-         WHERE fp.family_id = ? AND fp.is_active = TRUE`,
-        [user.user_id]
+         WHERE fp.family_id = ? AND fp.status = 'active'`,
+        [user.id]
       );
       assignedPatients = familyPatients.map(row => row.patient_id);
     }
@@ -244,56 +219,83 @@ router.get('/verify', async (req, res) => {
     connection.release();
 
     res.json({
-      userId: user.user_id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      phone: user.phone,
-      specialization: user.specialization,
-      relationship: user.relationship,
-      assignedPatients
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        phone: user.phone,
+        assignedPatients
+      }
     });
 
   } catch (error) {
     console.error('❌ Token verification error:', error);
-    res.status(401).json({ error: 'Invalid token' });
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Update profile
+// ==================== UPDATE PROFILE ====================
 router.put('/profile/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, phone, specialization, relationship } = req.body;
+    const { name, phone } = req.body;
 
-    // Sanitize data
-    const sanitizedData = sanitizeData({
-      name, phone, specialization, relationship
-    });
+    // Verify token first
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.userId != userId) {
+      return res.status(403).json({ error: 'Unauthorized to update this profile' });
+    }
 
     const connection = await mysqlService.pool.getConnection();
     
     await connection.execute(
       `UPDATE users 
-       SET name = ?, phone = ?, specialization = ?, relationship = ?, updated_at = NOW()
-       WHERE user_id = ?`,
-      [sanitizedData.name, sanitizedData.phone, sanitizedData.specialization, sanitizedData.relationship, userId]
+       SET name = ?, phone = ?, updated_at = CURRENT_TIMESTAMP()
+       WHERE id = ?`,
+      [name, phone || null, userId]
     );
 
     connection.release();
 
-    res.json({ message: 'Profile updated successfully' });
+    res.json({ 
+      message: 'Profile updated successfully',
+      user: {
+        id: userId,
+        name,
+        phone: phone || null
+      }
+    });
 
   } catch (error) {
     console.error('❌ Profile update error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
 });
 
-function generateUserId(role) {
-  const prefix = role === 'doctor' ? 'DOC' : role === 'family' ? 'FAM' : 'ADM';
-  const random = Math.random().toString(36).substr(2, 9).toUpperCase();
-  return `${prefix}${random}`;
-}
+// ==================== LOGOUT ====================
+// Untuk JWT, logout dilakukan di client dengan menghapus token
+// Ini hanya endpoint informasi
+router.post('/logout', (req, res) => {
+  res.json({ message: 'Logout successful. Please remove token from client storage.' });
+});
 
 export default router;

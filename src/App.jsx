@@ -14,13 +14,11 @@ import Unauthorized from "./pages/Unauthorized";
 // Common Dashboard Pages
 import Dashboard from "./pages/Dashboard/Dashboard";
 import UserProfile from "./pages/Dashboard/UserProfile";
-import SystemTest from "./components/SystemTest";
 
 // Doctor-Specific Pages
 import PatientList from "./pages/Dashboard/PatientList";
 import PatientDetail from "./pages/Dashboard/PatientDetail";
 import HistoryAnalytics from "./pages/Dashboard/HistoryAnalytics";
-import DeviceMonitoring from "./pages/Dashboard/DeviceMonitoring";
 import PatientManagement from "./pages/Dashboard/PatientManagement";
 
 // Family-Specific Pages
@@ -91,14 +89,6 @@ function App() {
               </RequireAuth>
             } />
 
-            {/* Device Monitoring - Mainly for doctors */}
-            <Route path="/device" element={
-              <RequireAuth requiredRole="doctor">
-                <DashboardLayout>
-                  <DeviceMonitoring />
-                </DashboardLayout>
-              </RequireAuth>
-            } />
 
             {/* Patient Management - Only for doctors */}
             <Route path="/manage-patients" element={
@@ -175,15 +165,6 @@ function App() {
                     ? <Navigate to="/family/profile" replace />
                     : <DashboardLayout><UserProfile /></DashboardLayout>
                 )}
-              </RequireAuth>
-            } />
-
-            {/* System Test - Accessible by all authenticated users */}
-            <Route path="/system-test" element={
-              <RequireAuth>
-                <DashboardLayout>
-                  <SystemTest />
-                </DashboardLayout>
               </RequireAuth>
             } />
             
