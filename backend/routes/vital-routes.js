@@ -1,38 +1,12 @@
 // backend/routes/vital-routes.js
 import express from 'express';
-import jwt from 'jsonwebtoken'; // IMPORT DI SINI!
 import mysqlService from '../services/mysql-service.js';
+import { authenticateJWT } from '../middleware/auth-middleware.js'; // GUNAKAN INI!
+
 
 const router = express.Router();
 
-// ==================== MIDDLEWARE ====================
-const authenticateJWT = (req, res, next) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ error: 'Authentication token required' });
-    }
 
-    // Gunakan jwt langsung, bukan import lagi
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    req.user = decoded;
-    next();
-  } catch (error) {
-    console.error('Auth middleware error:', error);
-    
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expired' });
-    }
-    
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-};
 
 // Middleware khusus untuk IoT device (tanpa JWT, pakai API key)
 const authenticateDevice = (req, res, next) => {

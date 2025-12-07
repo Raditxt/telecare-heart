@@ -3,6 +3,8 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import mysqlService from '../services/mysql-service.js';
+import { authenticateJWT } from '../middleware/auth-middleware.js'; // GUNAKAN INI!
+
 
 const router = express.Router();
 
@@ -244,19 +246,13 @@ router.get('/verify', async (req, res) => {
 });
 
 // ==================== UPDATE PROFILE ====================
-router.put('/profile/:userId', async (req, res) => {
+router.put('/profile/:userId', authenticateJWT, async (req, res) => {
   try {
     const { userId } = req.params;
     const { name, phone } = req.body;
-
-    // Verify token first
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.userId != userId) {
+    
+    // Periksa apakah user mengupdate profile sendiri
+    if (req.user.userId != userId) {
       return res.status(403).json({ error: 'Unauthorized to update this profile' });
     }
 
@@ -282,18 +278,11 @@ router.put('/profile/:userId', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Profile update error:', error);
-    
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    
     res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
 });
 
 // ==================== LOGOUT ====================
-// Untuk JWT, logout dilakukan di client dengan menghapus token
-// Ini hanya endpoint informasi
 router.post('/logout', (req, res) => {
   res.json({ message: 'Logout successful. Please remove token from client storage.' });
 });

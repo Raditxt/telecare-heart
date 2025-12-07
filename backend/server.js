@@ -10,6 +10,8 @@ import mysqlService from './services/mysql-service.js';
 import familyRoutes from './routes/family-routes.js'; // ✅ Sudah ada
 import patientRoutes from './routes/patient-routes.js'; // ✅ Sudah ada
 import vitalsroutes from './routes/vital-routes.js';
+import dashboardroutes from './routes/dashboard-routes.js';
+import assignmentroutes from './routes/assignment-routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -24,6 +26,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/family', familyRoutes); // ✅ Ini sudah benar
 app.use('/api/patients', patientRoutes); // ✅ Patient routes dengan path yang sama
 app.use('/api/vitals', vitalsroutes); // Vitals service routes
+app.use('/api/dashboard', dashboardroutes); // Dashboard service routes
+app.use('/api/assignments', assignmentroutes); // Assignment service routes
+
 
 // Health check
 app.get('/health', async (req, res) => {
