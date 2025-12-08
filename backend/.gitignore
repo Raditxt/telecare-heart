@@ -1,0 +1,74 @@
+# ----------------------------------------------------------------------
+# 1. DEPENDENCIES & BUILD ARTIFACTS
+# ----------------------------------------------------------------------
+
+# Dependencies
+# node_modules ini MENGGANTIKAN node_modules yang sudah ada di daftar Anda
+/node_modules
+/jspm_packages/
+/pnpm-lock.yaml
+
+# Build output directories (ganti jika nama folder build Anda berbeda)
+/dist
+/build
+/out
+/public/build
+/dist-ssr # dari daftar Anda
+
+# Vite-specific build/cache
+/.vite
+/*.tsbuildinfo # TS incremental build files
+
+# ----------------------------------------------------------------------
+# 2. LOGS & DEBUGGING
+# ----------------------------------------------------------------------
+
+# Logs (termasuk dari npm/yarn/pnpm/lerna dan Firebase)
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+firestore-debug.log
+
+# ----------------------------------------------------------------------
+# 3. ENVIRONMENT & CONFIGURATION (SENSITIVE DATA)
+# ----------------------------------------------------------------------
+
+# Environment variables files (Sangat Penting: JANGAN pernah commit kunci rahasia!)
+.env
+.env.local
+.env.*.local
+
+# ----------------------------------------------------------------------
+# 4. OS / EDITOR / IDE ARTIFACTS
+# ----------------------------------------------------------------------
+
+# OS Files
+.DS_Store # macOS
+Thumbs.db # Windows
+
+# Editor/IDE files (VS Code, WebStorm/IntelliJ, dll.)
+# .vscode/settings.json, .vscode/tasks.json, .vscode/launch.json, dll.
+# Akan diabaikan KECUALI extensions.json (dikecualikan di bawah)
+.vscode/*
+!.vscode/extensions.json # JANGAN HAPUS! Ini PENTING agar Git tetap melacak ekstensi yang direkomendasikan
+.idea/ # WebStorm/IntelliJ/IDE lain dari JetBrains
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw? # Vim/NeoVim swap files
+*.cache # cache tooling (misalnya cache Vite/Tailwind, digabung di sini)
+
+# ----------------------------------------------------------------------
+# 5. TOOLING SPECIFIC (Firebase)
+# ----------------------------------------------------------------------
+
+# Firebase CLI artifacts
+.firebase/
+firebase-debug.log # Ini sudah tercakup di bagian LOGS, tapi tidak apa-apa jika mau spesifik
+firebase # Jika ini merujuk pada direktori output yang tidak sengaja dibuat
+.firebaserc # (Opsional: Jika Anda tidak mau melacak konfigurasi project Firebase lokal)

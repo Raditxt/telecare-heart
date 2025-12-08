@@ -1,6 +1,5 @@
 // backend/services/mqtt-client-hybrid.js
 import mqtt from 'mqtt';
-import { db } from './firebase-admin.js';
 import mysqlService from './mysql-service.js';
 
 class HybridMQTTClient {
@@ -124,16 +123,13 @@ class HybridMQTTClient {
     };
 
     try {
-      // 1. Save to MySQL untuk historical data (primary storage)
-      await mysqlService.saveVitals(deviceId, data.patientId, vitalData);
+      // Save to MySQL untuk historical data
+      await mysqlService.saveVitals(deviceId, vitalData.patientId, vitalData);
       
-      // 2. Save to Firestore untuk real-time dashboard (latest data only)
-      await this.updateRealtimeVitals(deviceId, vitalData);
-      
-      // 3. Check for alerts
+      // Check for alerts
       await this.checkAlerts(vitalData);
       
-      console.log(`✅ Vitals processed - MySQL (historical) + Firestore (real-time)`);
+      console.log(`✅ Vitals saved to MySQL for ${deviceId}`);
     } catch (error) {
       console.error('❌ Error processing vitals:', error);
     }
@@ -141,23 +137,9 @@ class HybridMQTTClient {
 
   async processECGData(deviceId, data) {
     try {
-      // ECG data langsung ke MySQL saja (karena data besar)
+      // ECG data langsung ke MySQL
       await mysqlService.saveECGData(deviceId, data.patientId, data);
       console.log(`✅ ECG data saved to MySQL for ${deviceId}`);
-      
-      // Jika butuh real-time ECG features, bisa extract metrics ringan
-      if (data.ecgValues && data.ecgValues.length > 0) {
-        const ecgMetrics = {
-          deviceId,
-          patientId: data.patientId,
-          heartRate: this.calculateHeartRateFromECG(data.ecgValues),
-          signalQuality: this.assessSignalQuality(data.ecgValues),
-          timestamp: new Date()
-        };
-        
-        // Simpan metrics ringan ke Firestore untuk real-time display
-        await db.collection('ecg_metrics').add(ecgMetrics);
-      }
     } catch (error) {
       console.error('❌ Error processing ECG data:', error);
     }
@@ -166,40 +148,21 @@ class HybridMQTTClient {
   async processDeviceStatus(deviceId, data) {
     const deviceData = {
       deviceId,
-      name: data.deviceName || `Device_${deviceId}`,
+      deviceName: data.deviceName || `Device_${deviceId}`,
+      patientId: data.patientId || 'unknown',
       status: data.status || 'connected',
-      firmware: data.firmware || '1.0.0',
-      lastSeen: new Date(),
       battery: data.battery,
+      firmware: data.firmware || '1.0.0',
       ipAddress: data.ipAddress,
-      wifiStrength: data.wifiStrength,
-      patientId: data.patientId || 'unknown'
+      lastSeen: new Date()
     };
 
     try {
-      // Device status simpan di Firestore untuk real-time monitoring
-      await db.collection('devices').doc(deviceId).set(deviceData, { merge: true });
-      console.log(`✅ Device status updated in Firestore: ${deviceId}`);
+      // Device status simpan di MySQL
+      await mysqlService.updateDevice(deviceId, deviceData);
+      console.log(`✅ Device status updated in MySQL: ${deviceId}`);
     } catch (error) {
       console.error('❌ Error updating device status:', error);
-    }
-  }
-
-  async updateRealtimeVitals(deviceId, vitalData) {
-    try {
-      // Update latest vitals untuk real-time dashboard
-      await db.collection('vitals_realtime').doc(deviceId).set(vitalData);
-      
-      // Update patient's current status
-      if (vitalData.patientId && vitalData.patientId !== 'unknown') {
-        await db.collection('patients').doc(vitalData.patientId).set({
-          lastVitals: vitalData,
-          lastUpdate: new Date(),
-          status: vitalData.status
-        }, { merge: true });
-      }
-    } catch (error) {
-      console.error('❌ Error updating realtime vitals:', error);
     }
   }
 
@@ -210,17 +173,11 @@ class HybridMQTTClient {
         deviceId: vitalData.deviceId,
         type: vitalData.status,
         message: this.generateAlertMessage(vitalData),
-        timestamp: new Date(),
-        resolved: false,
-        vitalData: {
-          heartRate: vitalData.heartRate,
-          spO2: vitalData.spO2,
-          temperature: vitalData.temperature
-        }
+        timestamp: new Date()
       };
 
       try {
-        await db.collection('alerts').add(alertData);
+        await mysqlService.createAlert(alertData);
         console.log(`🚨 Alert created: ${alertData.message}`);
       } catch (error) {
         console.error('❌ Error creating alert:', error);
@@ -244,29 +201,6 @@ class HybridMQTTClient {
     return `Critical vitals: ${issues.join(', ')}`;
   }
 
-  calculateHeartRateFromECG(ecgValues) {
-    if (!ecgValues || ecgValues.length === 0) return 72;
-    
-    const avgValue = ecgValues.reduce((sum, val) => sum + Math.abs(val), 0) / ecgValues.length;
-    return Math.round(60 + (avgValue * 10));
-  }
-
-  assessSignalQuality(ecgValues) {
-    if (!ecgValues || ecgValues.length === 0) return 'poor';
-    
-    const noiseLevel = this.calculateNoiseLevel(ecgValues);
-    return noiseLevel < 0.1 ? 'good' : noiseLevel < 0.3 ? 'fair' : 'poor';
-  }
-
-  calculateNoiseLevel(ecgValues) {
-    if (!ecgValues || ecgValues.length < 2) return 0.5;
-    
-    const mean = ecgValues.reduce((sum, val) => sum + val, 0) / ecgValues.length;
-    const variance = ecgValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / ecgValues.length;
-    
-    return Math.min(variance / 100, 1);
-  }
-
   determineVitalStatus(data) {
     const { heartRate, spO2, temperature } = data;
     
@@ -279,10 +213,12 @@ class HybridMQTTClient {
   }
 
   publish(topic, message) {
-    if (this.isConnected) {
+    if (this.isConnected && this.client) {
       this.client.publish(topic, JSON.stringify(message));
+      return true;
     } else {
       console.error('❌ Cannot publish - MQTT not connected');
+      return false;
     }
   }
 
@@ -295,6 +231,6 @@ class HybridMQTTClient {
   }
 }
 
-// Export instance sebagai default
-const mqttClient = new HybridMQTTClient();
-export default mqttClient;
+// Export singleton instance
+const hybridMQTTClient = new HybridMQTTClient();
+export default hybridMQTTClient;

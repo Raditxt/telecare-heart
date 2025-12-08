@@ -3,166 +3,228 @@ import mysqlService from '../services/mysql-service.js';
 
 const router = express.Router();
 
-// Assign family to patient (Doctor only)
-router.post('/assign-family', async (req, res) => {
+const authenticateJWT = async (req, res, next) => {
   try {
-    const { doctorId, familyEmail, patientId, relationship } = req.body;
-
-    const connection = await mysqlService.pool.getConnection();
+    const token = req.headers.authorization?.replace('Bearer ', '');
     
-    // 1. Cari user family berdasarkan email
-    const [familyUsers] = await connection.execute(
-      'SELECT user_id FROM users WHERE email = ? AND role = "family"',
-      [familyEmail]
-    );
-
-    if (familyUsers.length === 0) {
-      connection.release();
-      return res.status(404).json({ error: 'Family user not found' });
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication token required' });
     }
 
-    const familyId = familyUsers[0].user_id;
-
-    // 2. Cek apakah relasi sudah ada
-    const [existing] = await connection.execute(
-      'SELECT * FROM family_patients WHERE family_id = ? AND patient_id = ?',
-      [familyId, patientId]
-    );
-
-    if (existing.length > 0) {
-      connection.release();
-      return res.status(400).json({ error: 'Family already assigned to this patient' });
-    }
-
-    // 3. Buat relasi
-    await connection.execute(
-      'INSERT INTO family_patients (family_id, patient_id, relationship, assigned_by) VALUES (?, ?, ?, ?)',
-      [familyId, patientId, relationship, doctorId]
-    );
-
-    connection.release();
+    const jwt = await import('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    res.json({ 
-      success: true, 
-      message: 'Family assigned successfully',
-      familyId,
-      relationship 
-    });
-
+    req.user = decoded;
+    next();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Auth middleware error:', error);
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
-});
+};
 
-// Get family members for a patient (Doctor & Family)
-router.get('/patients/:patientId/families', async (req, res) => {
+// GET family's assigned patients
+router.get('/patients', authenticateJWT, async (req, res) => {
   try {
-    const { patientId } = req.params;
+    const { userId, role } = req.user;
+    
+    if (role !== 'family') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const connection = await mysqlService.pool.getConnection();
     
-    // ✅ PERBAIKAN: Hapus kondisi fp.is_active = TRUE karena kolom tidak ada
-    const [families] = await connection.execute(
+    const [patients] = await connection.execute(
       `SELECT 
-        fp.family_id,
-        u.name as family_name,
-        u.email as family_email,
-        u.phone as family_phone,
+        p.*,
         fp.relationship,
+        fp.status as assignment_status,
         fp.assigned_at,
-        d.name as assigned_by_doctor
-       FROM family_patients fp
-       INNER JOIN users u ON fp.family_id = u.user_id
-       LEFT JOIN users d ON fp.assigned_by = d.user_id
-       WHERE fp.patient_id = ?  -- Hapus: AND fp.is_active = TRUE
+        u.name as assigned_by_name
+       FROM patients p
+       JOIN family_patients fp ON p.patient_id = fp.patient_id
+       JOIN users u ON fp.assigned_by = u.id
+       WHERE fp.family_id = ? AND fp.status = 'active'
        ORDER BY fp.assigned_at DESC`,
-      [patientId]
+      [userId]
     );
-    
+
     connection.release();
-    res.json(families);
-  } catch (error) {
-    console.error('Error getting patient families:', error);
-    res.status(500).json({ 
-      error: 'Failed to get family members',
-      details: error.message 
+
+    res.json({
+      patients,
+      total: patients.length
     });
+
+  } catch (error) {
+    console.error('Get family patients error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Remove family access (Doctor only)
-router.delete('/families/:familyId/patients/:patientId', async (req, res) => {
+// GET family member's own profile
+router.get('/profile', authenticateJWT, async (req, res) => {
   try {
-    const { familyId, patientId } = req.params;
-    const connection = await mysqlService.pool.getConnection();
+    const { userId, role } = req.user;
     
-    // ✅ PERBAIKAN: Karena tidak ada kolom is_active, gunakan DELETE langsung
-    await connection.execute(
-      'DELETE FROM family_patients WHERE family_id = ? AND patient_id = ?',
-      [familyId, patientId]
-    );
-    
-    connection.release();
-    res.json({ 
-      success: true,
-      message: 'Family access removed successfully' 
-    });
-  } catch (error) {
-    console.error('Error removing family access:', error);
-    res.status(500).json({ 
-      error: 'Failed to remove family access',
-      details: error.message 
-    });
-  }
-});
+    if (role !== 'family') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
-// ✅ TAMBAHKAN: Endpoint untuk mendapatkan semua family users (untuk dropdown/autocomplete)
-router.get('/users', async (req, res) => {
-  try {
     const connection = await mysqlService.pool.getConnection();
     
     const [users] = await connection.execute(
-      `SELECT user_id, name, email, phone 
+      `SELECT 
+        id, email, name, phone, role,
+        (SELECT COUNT(*) FROM family_patients WHERE family_id = ? AND status = 'active') as patient_count
        FROM users 
-       WHERE role = 'family' AND is_active = TRUE
-       ORDER BY name ASC`
+       WHERE id = ?`,
+      [userId, userId]
     );
-    
+
+    if (users.length === 0) {
+      connection.release();
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     connection.release();
-    res.json(users);
+
+    res.json(users[0]);
+
   } catch (error) {
-    console.error('Error getting family users:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Get family profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// ✅ TAMBAHKAN: Endpoint untuk mendapatkan family assignments by family ID
-router.get('/families/:familyId/assignments', async (req, res) => {
+// UPDATE family member's own profile
+router.put('/profile', authenticateJWT, async (req, res) => {
   try {
-    const { familyId } = req.params;
+    const { userId, role } = req.user;
+    const { name, phone } = req.body;
+    
+    if (role !== 'family') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const connection = await mysqlService.pool.getConnection();
     
-    const [assignments] = await connection.execute(
+    await connection.execute(
+      `UPDATE users 
+       SET name = ?, phone = ?, updated_at = CURRENT_TIMESTAMP()
+       WHERE id = ?`,
+      [name, phone || null, userId]
+    );
+
+    connection.release();
+
+    res.json({ 
+      message: 'Profile updated successfully',
+      user: {
+        id: userId,
+        name,
+        phone: phone || null
+      }
+    });
+
+  } catch (error) {
+    console.error('Update family profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET family member's notifications/alerts
+router.get('/alerts', authenticateJWT, async (req, res) => {
+  try {
+    const { userId, role } = req.user;
+    
+    if (role !== 'family') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const { limit = 20 } = req.query;
+
+    const connection = await mysqlService.pool.getConnection();
+    
+    // Get alerts for family's patients
+    const [alerts] = await connection.execute(
       `SELECT 
-        fp.patient_id,
+        v.*,
         p.name as patient_name,
         p.room,
-        p.condition,
-        fp.relationship,
-        fp.assigned_at,
-        d.name as assigned_by_doctor
-       FROM family_patients fp
-       INNER JOIN patients p ON fp.patient_id = p.patient_id
-       LEFT JOIN users d ON fp.assigned_by = d.user_id
-       WHERE fp.family_id = ?
-       ORDER BY fp.assigned_at DESC`,
-      [familyId]
+        TIMESTAMPDIFF(MINUTE, v.created_at, NOW()) as minutes_ago
+       FROM vitals v
+       JOIN patients p ON v.patient_id = p.patient_id
+       WHERE p.patient_id IN (
+         SELECT patient_id FROM family_patients 
+         WHERE family_id = ? AND status = 'active'
+       )
+       AND v.status IN ('critical', 'warning')
+       AND v.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+       ORDER BY v.created_at DESC
+       LIMIT ?`,
+      [userId, parseInt(limit)]
     );
-    
+
+    // Get unread count
+    const [unreadCount] = await connection.execute(
+      `SELECT COUNT(*) as count
+       FROM vitals v
+       WHERE v.patient_id IN (
+         SELECT patient_id FROM family_patients 
+         WHERE family_id = ? AND status = 'active'
+       )
+       AND v.status IN ('critical', 'warning')
+       AND v.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+       AND v.created_at > COALESCE(
+         (SELECT last_seen_at FROM user_notifications WHERE user_id = ?),
+         DATE_SUB(NOW(), INTERVAL 25 HOUR)
+       )`,
+      [userId, userId]
+    );
+
     connection.release();
-    res.json(assignments);
+
+    res.json({
+      alerts,
+      unread_count: unreadCount[0]?.count || 0,
+      total: alerts.length
+    });
+
   } catch (error) {
-    console.error('Error getting family assignments:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Get family alerts error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// MARK alerts as read
+router.post('/alerts/read', authenticateJWT, async (req, res) => {
+  try {
+    const { userId, role } = req.user;
+    
+    if (role !== 'family') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const connection = await mysqlService.pool.getConnection();
+    
+    // Update or insert last seen timestamp
+    await connection.execute(
+      `INSERT INTO user_notifications (user_id, last_seen_at) 
+       VALUES (?, NOW()) 
+       ON DUPLICATE KEY UPDATE last_seen_at = NOW()`,
+      [userId]
+    );
+
+    connection.release();
+
+    res.json({ 
+      message: 'Alerts marked as read',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Mark alerts read error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

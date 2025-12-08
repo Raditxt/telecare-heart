@@ -1,12 +1,10 @@
 // backend/routes/vital-routes.js
 import express from 'express';
 import mysqlService from '../services/mysql-service.js';
-import { authenticateJWT } from '../middleware/auth-middleware.js'; // GUNAKAN INI!
-
+import { authenticateJWT } from '../middleware/auth-middleware.js';
+import { triggerNewVitalReading, triggerPatientStatusChange } from '../websocket/websocket-server.js'; // IMPORT WEBSOCKET
 
 const router = express.Router();
-
-
 
 // Middleware khusus untuk IoT device (tanpa JWT, pakai API key)
 const authenticateDevice = (req, res, next) => {
@@ -23,7 +21,7 @@ const authenticateDevice = (req, res, next) => {
   req.device = { type: 'iot' };
   next();
 };
-// ==================== HELPER FUNCTIONS ====================
+
 // ==================== HELPER FUNCTIONS ====================
 const determineStatus = (heart_rate, spO2, temperature, rr_interval = null) => {
   let status = 'normal';
@@ -109,8 +107,8 @@ async function checkPatientAccess(userId, role, patientId, connection) {
 // ==================== ROUTES ====================
 
 // 1. RECEIVE DATA FROM IOT DEVICE (Arduino/ESP32)
-// Endpoint ini untuk alat Anda mengirim data
 router.post('/device', authenticateDevice, async (req, res) => {
+  let connection;
   try {
     const {
       patient_id,
@@ -153,7 +151,18 @@ router.post('/device', authenticateDevice, async (req, res) => {
     // Determine status berdasarkan threshold
     const status = determineStatus(heart_rate, spO2, temperature, rr_interval);
 
-    const connection = await mysqlService.pool.getConnection();
+    connection = await mysqlService.pool.getConnection();
+    
+    // Get previous status for comparison
+    const [previousVital] = await connection.execute(
+      `SELECT status FROM vitals 
+       WHERE patient_id = ?
+       ORDER BY created_at DESC 
+       LIMIT 1`,
+      [patient_id]
+    );
+    
+    const previousStatus = previousVital[0]?.status || 'normal';
     
     // Insert vital data
     const [result] = await connection.execute(
@@ -173,6 +182,26 @@ router.post('/device', authenticateDevice, async (req, res) => {
     );
 
     const vitalId = result.insertId;
+    const created_at = new Date().toISOString();
+    
+    // Trigger WebSocket event untuk new vital reading
+    triggerNewVitalReading({
+      id: vitalId,
+      patient_id,
+      heart_rate,
+      spO2,
+      temperature,
+      ecg_raw,
+      ecg_filtered,
+      rr_interval,
+      status,
+      created_at
+    });
+    
+    // Trigger WebSocket event jika status berubah
+    if (previousStatus !== status) {
+      triggerPatientStatusChange(patient_id, previousStatus, status);
+    }
 
     // Jika status critical, trigger alert
     if (status === 'critical') {
@@ -190,12 +219,19 @@ router.post('/device', authenticateDevice, async (req, res) => {
       message: 'Vital data recorded',
       vital_id: vitalId,
       status,
-      timestamp: new Date().toISOString(),
+      status_changed: previousStatus !== status,
+      previous_status: previousStatus,
+      current_status: status,
+      timestamp: created_at,
       patient_id
     });
 
   } catch (error) {
     console.error('Device data error:', error);
+    
+    if (connection) {
+      connection.release();
+    }
     
     if (error.code === 'ER_NO_REFERENCED_ROW_2') {
       return res.status(404).json({ error: 'Patient not found' });
